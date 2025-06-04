@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Usuario {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  email        String   @unique
+  senha        String
+  departamento String
+  curso        String
+  fotoPerfil   Bytes?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  avaliacoes  Avaliacao[]
+  comentarios Comentarios[]
+}
+
+model Professor {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  departamento String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  disciplinas professorDisciplina[]
+  Avaliacao   Avaliacao[]
+}
+
+model professorDisciplina {
+  professorID  Int
+  disciplinaID Int
+
+  professor  Professor  @relation(fields: [professorID], references: [id])
+  disciplina Disciplina @relation(fields: [disciplinaID], references: [id])
+
+  @@id([professorID, disciplinaID])
+}
+
+model Disciplina {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  professores professorDisciplina[]
+  Avaliacao   Avaliacao[]
+}
+
+model Avaliacao {
+  id           Int      @id @default(autoincrement())
+  usuarioID    Int
+  professorID  Int?
+  disciplinaID Int?
+  conteudo     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  comentarios Comentarios[]
+
+  usuario    Usuario     @relation(fields: [usuarioID], references: [id])
+  professor  Professor?  @relation(fields: [professorID], references: [id])
+  disciplina Disciplina? @relation(fields: [disciplinaID], references: [id])
+}
+
+model Comentarios {
+  id          Int      @id @default(autoincrement())
+  usuarioID   Int
+  avaliacaoID Int
+  conteudo    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  usuario   Usuario   @relation(fields: [usuarioID], references: [id])
+  avaliacao Avaliacao @relation(fields: [avaliacaoID], references: [id])
+}
