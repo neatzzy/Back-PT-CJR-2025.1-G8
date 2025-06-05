@@ -69,11 +69,15 @@ export class UsuarioService {
   }
 
   async update(id: number, updateUsuarioDto: CreateUsuarioDto) {
-    return this.prisma.usuario.update({
+    const user = await this.prisma.usuario.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
+    }
+    const updateUsuario = await this.prisma.usuario.update({
       where: { id },
       data: updateUsuarioDto,
-
-    });    
+    });
+    return {message: 'Usuário atualizado com sucesso', data: updateUsuario};    
   }
 
   remove(id: number) {
