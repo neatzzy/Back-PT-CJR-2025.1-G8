@@ -22,12 +22,22 @@ export class UsuarioController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUsuarioDto: CreateUsuarioDto) {
-    return this.usuarioService.update(+id, updateUsuarioDto);
+  async update(@Param('id') id: string, @Body() updateUsuarioDto: CreateUsuarioDto) {
+    try {
+      const result = await this.usuarioService.update(+id, updateUsuarioDto);
+      return { status: 'successo', message: result.message, data: result.data };
+    } catch (error) {
+      return { status: 'erro', message: error.message };
   }
+}
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usuarioService.remove(+id);
+  async remove(@Param('id') id: string) {
+    try {
+      const result = await this.usuarioService.remove(+id);
+      return { status: 'successo', message: result.message};
+    }catch (error) {
+      return { status: 'erro', message: error.message };
   }
+}
 }

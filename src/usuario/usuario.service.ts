@@ -62,7 +62,7 @@ export class UsuarioService {
     });
 
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
     }
 
     return user;
@@ -80,9 +80,12 @@ export class UsuarioService {
     return {message: 'Usuário atualizado com sucesso', data: updateUsuario};    
   }
 
-  remove(id: number) {
-    return this.prisma.usuario.delete({
-      where: { id },
-    });
+  async remove(id: number) {
+    const user = await this.prisma.usuario.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
+    }
+    await this.prisma.usuario.delete({ where: { id } });
+    return { message: `Usuário removido com sucesso` };
   }
 }
