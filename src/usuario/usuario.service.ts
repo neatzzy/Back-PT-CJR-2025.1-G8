@@ -73,10 +73,12 @@ export class UsuarioService {
       where: { id },
       data: updateUsuarioDto,
 
-    });    return `This action updates a #${id} usuario`;
+    });    
   }
 
   remove(id: number) {
-    return `This action removes a #${id} usuario`;
+    return this.prisma.usuario.delete({
+      where: { id },
+    });
   }
 }
