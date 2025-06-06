@@ -23,7 +23,7 @@ export class UsuarioController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUsuarioDto: CreateUsuarioDto) {
+  async update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
     try {
       const result = await this.usuarioService.update(+id, updateUsuarioDto);
       return { status: 'successo', message: result.message, data: result.data };
