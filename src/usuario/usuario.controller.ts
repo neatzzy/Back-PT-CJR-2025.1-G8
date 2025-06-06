@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
+import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 
 @Controller('usuario')
 export class UsuarioController {
@@ -22,7 +23,7 @@ export class UsuarioController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUsuarioDto: CreateUsuarioDto) {
+  async update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
     try {
       const result = await this.usuarioService.update(+id, updateUsuarioDto);
       return { status: 'successo', message: result.message, data: result.data };
