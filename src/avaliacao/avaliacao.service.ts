@@ -3,6 +3,7 @@ import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 
 @Injectable()
 export class AvaliacaoService {
@@ -106,23 +107,59 @@ export class AvaliacaoService {
     }
   }
 
-  async findAll() {
-    return await this.prisma.avaliacao.findMany({
-      select: {
-        id: true,
-        usuarioID: true,
-        professorID: true,
-        disciplinaID: true,
-        conteudo: true,
-        usuario: true,
-        professor: true,
-        disciplina: true,
-        comentarios: true,
-        createdAt: true,
-        updatedAt: true,
+  
+  async findAll(params: FindAllAvaliacoesDto) {
+    const {
+      page,
+      pageSize,
+      sort,
+      order,
+      professorID,
+      disciplinaID,
+      search,
+      include,
+    } = params;
+
+    const pageNumber = page ?? 1;
+    const pageSizeNumber = pageSize ?? 10;
+    const sortBy = sort ?? 'createdAt';
+    const sortOrder = order ?? 'desc';
+    
+    const skip = (pageNumber - 1) * pageSizeNumber;
+
+    const where: any = {};
+    if (professorID) where.professorID = professorID;
+    if (disciplinaID) where.disciplinaID = disciplinaID;
+    if (search) { where.conteudo = { contains: search, mode: 'insensitive' }; }
+
+    const includeOptions: any = {};
+    if (include?.includes('professor')) includeOptions.usuario = true;
+    if (include?.includes('disciplina')) includeOptions.usuario = true;
+    if (include?.includes('comentarios')) includeOptions.comentarios = true;
+
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.avaliacao.findMany({
+        where,
+        include: includeOptions,
+        skip,
+        take: pageSizeNumber,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      this.prisma.avaliacao.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page: pageNumber,
+        pageSize: pageSizeNumber,
+        totalPages: Math.ceil(total / pageSizeNumber),
       },
-    });
+    };
   }
+
 
   findOne(id: number) {
     return `This action returns a #${id} avaliacao`;
