@@ -1,30 +1,43 @@
 import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { ComentarioEntity } from "src/comentarios/entities/comentario.entity";
+import { Usuario } from "src/usuario/entities/usuario.entity";
+import { ProfessorEntity } from "src/professor/entities/professor.entity";
+import { DisciplinaEntity } from "src/disciplina/entities/disciplina.entity";
 
 export class AvaliacaoEntity {
     @IsInt()
-    id:number;
-    usuarioId:number;
+    id: number;
 
     @IsInt()
+    usuarioID: number;
+
     @IsOptional()
-    professorID:number;
-    
+    usuario?: Usuario; // Relação N:1 (muitos para um usuário)
+
+    @IsOptional()
     @IsInt()
+    professorID?: number;
+
     @IsOptional()
-    disciplinaID:number;
-    
+    professor?: ProfessorEntity; // Relação N:1 (muitos para um professor)
+
+    @IsOptional()
+    @IsInt()
+    disciplinaID?: number;
+
+    @IsOptional()
+    disciplina?: DisciplinaEntity; // Relação N:1 (muitos para uma disciplina)
+
     @IsString()
     @IsNotEmpty({ message: 'O campo conteúdo não pode estar vazio.' })
-    conteudo:string;
+    conteudo: string;
 
     @IsOptional()
-    @IsString()
-    comentarios?: string; // opcional enquanto não implementado o crud de comentários
+    comentarios?: ComentarioEntity[]; // Relação 1:N (uma avaliação tem muitos comentários)
 
-    createdAt?: Date; //não é necessário colocar
-    updatedAt?: Date; //não é necessário colocar
+    createdAt?: Date;
+    updatedAt?: Date;
 }
-
 
 
 

@@ -1,6 +1,7 @@
 import { AvaliacaoEntity } from './../entities/avaliacao.entity';
 import { IsInt, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types'; 
+import { CreateComentarioDto } from 'src/comentarios/dto/create-comentario.dto';
 
 export class CreateAvaliacaoDto extends PartialType(AvaliacaoEntity) {
   @IsInt({ message: 'O campo usuarioID deve ser preenchido' })
@@ -20,6 +21,5 @@ export class CreateAvaliacaoDto extends PartialType(AvaliacaoEntity) {
   conteudo: string;
 
   @IsOptional() // opcional enquanto não implementado o crud de comentários
-  @IsString({ message: 'O campo comentários deve ser uma string.' })
-  comentarios?: string;
+  comentarios?: CreateComentarioDto[];
 }
