@@ -1,20 +1,26 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from '../prisma/prisma.service';
-import e from "express";
-import { CreateAvaliacaoDto } from "./dto/create-avaliacao.dto";
+import { Injectable } from '@nestjs/common';
+import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
+import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 
 @Injectable()
 export class AvaliacaoService {
-    constructor(private readonly prisma: PrismaService) {}
+  create(createAvaliacaoDto: CreateAvaliacaoDto) {
+    return 'This action adds a new avaliacao';
+  }
 
-    async create(createAvaliacaoDto: CreateAvaliacaoDto) {
-        const data = {
-            professorId: createAvaliacaoDto.professorId,
-            conteudo: createAvaliacaoDto.conteudo,
-            usuarioId: createAvaliacaoDto.usuarioId, 
-        };
-        return await this.prisma.avaliacao.create({ data });
-    }
+  findAll() {
+    return `This action returns all avaliacao`;
+  }
 
-    async 
+  findOne(id: number) {
+    return `This action returns a #${id} avaliacao`;
+  }
+
+  update(id: number, updateAvaliacaoDto: UpdateAvaliacaoDto) {
+    return `This action updates a #${id} avaliacao`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} avaliacao`;
+  }
 }

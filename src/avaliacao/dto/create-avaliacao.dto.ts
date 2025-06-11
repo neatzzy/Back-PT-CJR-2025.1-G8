@@ -1,16 +1,25 @@
-import { IsEmail, IsOptional, IsString, MinLength, IsNotEmpty, IsInt } from 'class-validator';
-import { Avaliacao } from '../entity/avaliacao.entity';
-import { PartialType } from '@nestjs/mapped-types';
+import { IsInt, IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import { Avaliacao } from '../entities/avaliacao.entity';
+import { PartialType } from '@nestjs/mapped-types'; 
 
-export class CreateAvaliacaoDto extends PartialType(Avaliacao){
-    @IsInt({ message: 'O campo Professor Id deve ser preenchido' })
-    @IsNotEmpty({ message: 'O campo Professor Id não pode estar vazio.' })
-    professorId: number;
+export class CreateAvaliacaoDto extends PartialType(Avaliacao) {
+  @IsInt({ message: 'O campo usuarioID deve ser preenchido' })
+  @IsNotEmpty({ message: 'O campo usuarioID não pode estar vazio.' })
+  usuarioID: number;
 
-    @IsString({ message: 'O campo conteúdo deve ter uma mensagem' })
-    @IsNotEmpty({ message: 'O campo conteúdo não pode estar vazio.' })
-    conteudo: string;
+  @IsOptional() // opcional enquanto não implementado o crud de professor
+  @IsInt({ message: 'O campo professorID deve ser um número inteiro.' })
+  professorID?: number;
 
-    /*pedir curso e/ou departamento do professor para friltrar as avaliações?*/
-    
+  @IsOptional() // opcional enquanto não implementado o crud de disciplina
+  @IsInt({ message: 'O campo disciplinaID deve ser um número inteiro.' })
+  disciplinaID?: number;
+
+  @IsString({ message: 'O campo conteúdo deve ter uma mensagem' })
+  @IsNotEmpty({ message: 'O campo conteúdo não pode estar vazio.' })
+  conteudo: string;
+
+  @IsOptional() // opcional enquanto não implementado o crud de comentários
+  @IsString({ message: 'O campo comentários deve ser uma string.' })
+  comentarios?: string;
 }
