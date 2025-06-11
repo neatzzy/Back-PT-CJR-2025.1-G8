@@ -7,12 +7,13 @@ export class Avaliacao {
 
     @IsString()
     conteudo:string;
+   
+    professorID:string;
 
-    @IsInt()
-    @IsOptional()    
-    professorID?:string;
-    
-    disciplinaID?:string;
+    disciplinaID:string;
+
+    @IsString()
+    @IsOptional()
 
     createdAt?: Date; //não é necessário colocar
     updatedAt?: Date; //não é necessário colocar
