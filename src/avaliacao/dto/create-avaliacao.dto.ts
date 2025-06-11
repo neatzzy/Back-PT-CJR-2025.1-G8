@@ -1,8 +1,8 @@
+import { AvaliacaoEntity } from './../entities/avaliacao.entity';
 import { IsInt, IsOptional, IsString, IsNotEmpty } from 'class-validator';
-import { Avaliacao } from '../entities/avaliacao.entity';
 import { PartialType } from '@nestjs/mapped-types'; 
 
-export class CreateAvaliacaoDto extends PartialType(Avaliacao) {
+export class CreateAvaliacaoDto extends PartialType(AvaliacaoEntity) {
   @IsInt({ message: 'O campo usuarioID deve ser preenchido' })
   @IsNotEmpty({ message: 'O campo usuarioID não pode estar vazio.' })
   usuarioID: number;

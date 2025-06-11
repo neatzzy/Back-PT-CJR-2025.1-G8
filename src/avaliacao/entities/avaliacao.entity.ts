@@ -1,6 +1,6 @@
 import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class Avaliacao {
+export class AvaliacaoEntity {
     @IsInt()
     id:number;
     usuarioId:number;
