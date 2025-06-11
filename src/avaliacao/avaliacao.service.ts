@@ -1,67 +1,109 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AvaliacaoService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createAvaliacaoDto: CreateAvaliacaoDto) {
-    const { usuarioID, 
-      professorID, professorNome,
-      disciplinaID, disciplinaNome,
-      conteudo, 
-      comentarios } = createAvaliacaoDto;
+    const { usuarioID, professorNome, disciplinaNome, conteudo, comentarios } = createAvaliacaoDto;
 
-    // Verifica se o usuário existe
+    // Verifica se o usuário existe (pode ser fora da transação)
     const usuario = await this.prisma.usuario.findUnique({ where: { id: usuarioID } });
     if (!usuario) {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
-    // Verifica se o professor existe, se não, cria
-    let professorId = professorID;
-    if (professorID) {
-      let professor = await this.prisma.professor.findUnique({ where: { id: professorID } });
+    try {
       
-      if (!professor) {
-        const dataProfessor: any = {
-          nome : professorNome
+      // Tudo dentro da transação!
+      return await this.prisma.$transaction(async (tx) => {
+        // Verifica/cria professor pelo nome
+        let professor = await tx.professor.findFirst({ where: { nome: professorNome } });
+        if (!professor) {
+          professor = await tx.professor.create({
+            data: {
+              nome: professorNome,
+              departamento: usuario.departamento,
+            },
+          });
+        }
+        const professorId = professor.id;
+
+        // Verifica/cria disciplina pelo nome
+        let disciplina = await tx.disciplina.findFirst({ where: { nome: disciplinaNome } });
+        if (!disciplina) {
+          disciplina = await tx.disciplina.create({
+            data: {
+              nome: disciplinaNome,
+            },
+          });
+        }
+        const disciplinaId = disciplina.id;
+
+        // Cria a relação N-N antes da avaliação
+        const relacao = await tx.professorDisciplina.findUnique({
+          where: {
+            professorID_disciplinaID: {
+              professorID: professorId,
+              disciplinaID: disciplinaId,
+            },
+          },
+        });
+
+        if (!relacao) {
+          await tx.professorDisciplina.create({
+            data: {
+              professorID: professorId,
+              disciplinaID: disciplinaId,
+            },
+          });
+        }
+
+        // cria avaliação
+        const dataAvaliacao: any = {
+          usuarioID,
+          professorID: professorId,
+          disciplinaID: disciplinaId,
+          conteudo,
         };
+
+        if (comentarios && comentarios.length > 0) {
+          dataAvaliacao.comentarios = {
+            create: comentarios,
+          };
+        }
+
+        return await tx.avaliacao.create({ data: dataAvaliacao });
+      });
+    
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
         
-        professor = await this.prisma.professor.create({ dataProfessor });
+        // Erro de constraint de chave estrangeira
+        if (error.code === 'P2003') {
+          throw new BadRequestException({
+            message: 'Violação de integridade referencial. Verifique se todos os IDs referenciados existem.',
+            prismaError: error.meta,
+          });
+        }
+        
+        // Outros erros conhecidos do Prisma
+        throw new BadRequestException({
+          message: 'Erro Prisma: ' + error.message,
+          prismaError: error.meta,
+        });
       }
       
-      professorId = professor.id;
+      // Outros erros não tratados
+      throw new InternalServerErrorException({
+        message: 'Erro interno ao criar avaliação.',
+        error: error.message,
+      });
     }
-
-    // Verifica se a disciplina existe, se não, cria
-    let disciplinaId = disciplinaID;
-    if (disciplinaID) {
-      let disciplina = await this.prisma.disciplina.findUnique({ where: { id: disciplinaID } });
-      if (!disciplina) {
-        disciplina = await this.prisma.disciplina.create({ data: { id: disciplinaID } });
-      }
-      disciplinaId = disciplina.id;
-    }
-
-    // Monta o objeto de dados para o Prisma
-    const dataAvaliacao: any = {
-      usuarioID,
-      professorID: professorId,
-      disciplinaID: disciplinaId,
-      conteudo,
-    };
-
-    // Se houver comentários, prepara para criar em cascata
-    if (comentarios && comentarios.length > 0) {
-      dataAvaliacao.comentarios = {
-        create: comentarios,
-      };
-    }
-
-    return await this.prisma.avaliacao.create({ dataAvaliacao });
   }
 
   async findAll() {
