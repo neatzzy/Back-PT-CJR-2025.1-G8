@@ -9,34 +9,32 @@ export class AvaliacaoEntity {
     id: number;
 
     @IsInt()
+    @IsNotEmpty()
     usuarioID: number;
 
-    @IsOptional()
-    usuario?: Usuario; // Relação N:1 (muitos para um usuário)
+    usuario: Usuario; // Relação N:1 (muitos para um usuário)
 
-    @IsOptional()
     @IsInt()
-    professorID?: number;
+    @IsNotEmpty()
+    professorID: number;
+    
+    professor: ProfessorEntity; // Relação N:1 (muitos para um professor)
 
-    @IsOptional()
-    professor?: ProfessorEntity; // Relação N:1 (muitos para um professor)
-
-    @IsOptional()
     @IsInt()
-    disciplinaID?: number;
+    @IsNotEmpty()
+    disciplinaID: number;
 
-    @IsOptional()
-    disciplina?: DisciplinaEntity; // Relação N:1 (muitos para uma disciplina)
+    disciplina: DisciplinaEntity; // Relação N:1 (muitos para uma disciplina)
 
     @IsString()
     @IsNotEmpty({ message: 'O campo conteúdo não pode estar vazio.' })
     conteudo: string;
 
     @IsOptional()
-    comentarios?: ComentarioEntity[]; // Relação 1:N (uma avaliação tem muitos comentários)
+    comentarios: ComentarioEntity[]; // Relação 1:N (uma avaliação tem muitos comentários)
 
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 

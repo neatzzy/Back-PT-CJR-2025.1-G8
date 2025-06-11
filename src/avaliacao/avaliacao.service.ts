@@ -2,31 +2,66 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import e from "express";
 
 @Injectable()
 export class AvaliacaoService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createAvaliacaoDto: CreateAvaliacaoDto) {
-    const { usuarioID, professorID, disciplinaID, conteudo, comentarios } = createAvaliacaoDto;
+    const { usuarioID, 
+      professorID, professorNome,
+      disciplinaID, disciplinaNome,
+      conteudo, 
+      comentarios } = createAvaliacaoDto;
+
+    // Verifica se o usuário existe
+    const usuario = await this.prisma.usuario.findUnique({ where: { id: usuarioID } });
+    if (!usuario) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    // Verifica se o professor existe, se não, cria
+    let professorId = professorID;
+    if (professorID) {
+      let professor = await this.prisma.professor.findUnique({ where: { id: professorID } });
+      
+      if (!professor) {
+        const dataProfessor: any = {
+          nome : professorNome
+        };
+        
+        professor = await this.prisma.professor.create({ dataProfessor });
+      }
+      
+      professorId = professor.id;
+    }
+
+    // Verifica se a disciplina existe, se não, cria
+    let disciplinaId = disciplinaID;
+    if (disciplinaID) {
+      let disciplina = await this.prisma.disciplina.findUnique({ where: { id: disciplinaID } });
+      if (!disciplina) {
+        disciplina = await this.prisma.disciplina.create({ data: { id: disciplinaID } });
+      }
+      disciplinaId = disciplina.id;
+    }
 
     // Monta o objeto de dados para o Prisma
-    const data: any = {
+    const dataAvaliacao: any = {
       usuarioID,
-      professorID,
-      disciplinaID,
+      professorID: professorId,
+      disciplinaID: disciplinaId,
       conteudo,
     };
 
     // Se houver comentários, prepara para criar em cascata
     if (comentarios && comentarios.length > 0) {
-      data.comentarios = {
+      dataAvaliacao.comentarios = {
         create: comentarios,
       };
     }
 
-    return await this.prisma.avaliacao.create({ data });
+    return await this.prisma.avaliacao.create({ dataAvaliacao });
   }
 
   async findAll() {
