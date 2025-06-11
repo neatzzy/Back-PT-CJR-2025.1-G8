@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { AvaliacaoService } from './avaliacao.service';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
+import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 
 @Controller('avaliacao')
 export class AvaliacaoController {
@@ -12,9 +13,9 @@ export class AvaliacaoController {
     return this.avaliacaoService.create(createAvaliacaoDto);
   }
 
-  @Get()
-  findAll() {
-    return this.avaliacaoService.findAll();
+ @Get()
+  findAll(@Query() query: FindAllAvaliacoesDto) {
+    return this.avaliacaoService.findAll(query);
   }
 
   @Get(':id')
