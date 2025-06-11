@@ -12,6 +12,9 @@ export class AvaliacaoService {
             professorId: createAvaliacaoDto.professorId,
             conteudo: createAvaliacaoDto.conteudo,
             usuarioId: createAvaliacaoDto.usuarioId, 
+        };
+        return await this.prisma.avaliacao.create({ data });
+    }
 
-        }
+    async 
 }
