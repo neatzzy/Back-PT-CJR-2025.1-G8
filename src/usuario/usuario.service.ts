@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { Usuario } from './entities/usuario.entity';
 
 @Injectable()
 export class UsuarioService {
@@ -25,7 +26,8 @@ export class UsuarioService {
       fotoPerfil: createUserDto.fotoPerfil,
     };
     
-    return await this.prisma.usuario.create({ data });
+    return await this.prisma.usuario.create({ 
+      data: { ...createUserDto, senha: hashedPassword} });
   }
 
   async findAll() {
@@ -46,8 +48,49 @@ export class UsuarioService {
   }
 
   async findOne(id: number) {
-    const user = await this.prisma.usuario.findUnique({
+    const isValidId = await this.prisma.usuario.findUnique({where: { id }  });
+
+    if (!isValidId) {
+      throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
+    }
+
+    return await this.prisma.user.findUnique({where: { id },
+    select: {
+        id: true,
+        email: true,
+        nome: true,
+        curso: true, 
+        departamento: true,
+        fotoPerfil: true,
+        avaliacoes: true, 
+        comentarios: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async findByEmail(email: string) {
+    const IsValidEmail = await this.prisma.usuario.findUnique({ where: {email} });
+    if (!IsValidEmail) {
+      return null;
+    }
+    return IsValidEmail
+  }
+
+  async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
+    const isValidId = await this.prisma.usuario.findUnique({ where: { id } });
+    if (!isValidId) {
+      throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
+    }
+
+    const hashedPassword = await bcrypt.hash(updateUsuarioDto.senha, 10)
+
+    return await this.prisma.usuario.update({
       where: { id },
+      data: {...updateUsuarioDto,
+        senha: hashedPassword
+      },
       select: {
         id: true,
         email: true,
@@ -61,32 +104,29 @@ export class UsuarioService {
         updatedAt: true,
       },
     });
-
-    if (!user) {
-      throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
-    }
-
-    return user;
-  }
-
-  async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
-    const user = await this.prisma.usuario.findUnique({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
-    }
-    const updateUsuario = await this.prisma.usuario.update({
-      where: { id },
-      data: updateUsuarioDto,
-    });
-    return {message: 'Usuário atualizado com sucesso', data: updateUsuario};    
+    
   }
 
   async remove(id: number) {
-    const user = await this.prisma.usuario.findUnique({ where: { id } });
-    if (!user) {
+    const isValidId = await this.prisma.usuario.findUnique({ where: { id } });
+    if (!isValidId) {
       throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
     }
-    await this.prisma.usuario.delete({ where: { id } });
-    return { message: `Usuário removido com sucesso` };
+    
+    return await this.prisma.usuario.delete({ 
+      where: { id } ,
+      select: {
+        id: true,
+        email: true,
+        nome: true,
+        curso: true, 
+        departamento: true,
+        fotoPerfil: true,
+        avaliacoes: true, 
+        comentarios: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 }
