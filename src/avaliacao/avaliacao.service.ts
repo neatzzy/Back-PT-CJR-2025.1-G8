@@ -133,8 +133,8 @@ export class AvaliacaoService {
     if (search) { where.conteudo = { contains: search, mode: 'insensitive' }; }
 
     const includeOptions: any = {};
-    if (include?.includes('professor')) includeOptions.usuario = true;
-    if (include?.includes('disciplina')) includeOptions.usuario = true;
+    if (include?.includes('professor')) includeOptions.usuario = true; //aqui não deveria ser .professor?
+    if (include?.includes('disciplina')) includeOptions.usuario = true; //aqui não deveria ser .disciplina?
     if (include?.includes('comentarios')) includeOptions.comentarios = true;
 
 
@@ -161,8 +161,21 @@ export class AvaliacaoService {
   }
 
 
-  findOne(id: number) {
-    return `Essa ação retorna a #${id} avaliacao`;
+  async findOne(id: number) {
+    const avaliacao = await this.prisma.avaliacao.findUnique({
+      where: {id},
+      include: {
+        usuario:true,
+        professor: true,
+        disciplina: true,
+        comentarios: true,
+      },
+    });
+
+    if (!avaliacao) {
+      throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+    }
+    return `Essa ação retorna a seguinte avaliação #${id}`;
   }
 
   update(id: number, updateAvaliacaoDto: UpdateAvaliacaoDto) {
