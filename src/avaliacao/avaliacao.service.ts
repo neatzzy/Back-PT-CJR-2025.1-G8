@@ -108,8 +108,9 @@ export class AvaliacaoService {
     const where: any = {};
     if (professorID) where.professorID = professorID;
     if (disciplinaID) where.disciplinaID = disciplinaID;
-    if (search) { where.conteudo = { contains: search, mode: 'insensitive' }; }
-
+    if (search) {
+      where.professor = { nome: { contains: search} };
+    }
     const includeOptions: any = {};
     if (include?.includes('professor')) includeOptions.professor = true;
     if (include?.includes('disciplina')) includeOptions.disciplina = true;
