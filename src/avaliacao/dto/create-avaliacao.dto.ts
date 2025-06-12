@@ -21,7 +21,7 @@ export class CreateAvaliacaoDto extends PartialType(AvaliacaoEntity) {
   @IsOptional({ message: 'O campo nome da disciplina é opcional.' })
   disciplinaNome: string;
 
-  @IsString({ message: 'O campo conteúdo deve ser uma string.' })
+  @IsString()
   @IsNotEmpty({ message: 'O campo conteúdo não pode estar vazio.' })
   conteudo: string;
 
