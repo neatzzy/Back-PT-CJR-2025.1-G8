@@ -1,6 +1,7 @@
 import {IsEmail, IsOptional, IsString, MinLength, IsNotEmpty} from 'class-validator';
-
-export class UpdateUsuarioDto {
+import { PartialType} from '@nestjs/mapped-types';
+import { Usuario } from '../entities/usuario.entity';
+export class UpdateUsuarioDto extends PartialType(Usuario) {   //documentando o partialtype que torna todos os campos opcionais, para garantir. 
     @IsOptional()
     @IsEmail({}, { message: 'O email fornecido é inválido.' })
     email?: string;

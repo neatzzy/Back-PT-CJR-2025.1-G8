@@ -162,14 +162,14 @@ export class AvaliacaoService {
 
 
   findOne(id: number) {
-    return `This action returns a #${id} avaliacao`;
+    return `Essa ação retorna a #${id} avaliacao`;
   }
 
   update(id: number, updateAvaliacaoDto: UpdateAvaliacaoDto) {
-    return `This action updates a #${id} avaliacao`;
+    return `Essa ação atualiza a #${id} avaliacao`;
   }
 
   remove(id: number) {
-    return `This action removes a #${id} avaliacao`;
+    return `Essa ação remove a #${id} avaliacao`;
   }
 }

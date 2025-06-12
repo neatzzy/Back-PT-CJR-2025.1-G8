@@ -11,6 +11,7 @@ export class CreateAvaliacaoDto extends PartialType(AvaliacaoEntity) {
 
   @IsInt({ message: 'O campo professorID deve ser um número inteiro.' })
   @IsNotEmpty({ message: 'O campo professorID não pode estar vazio.' })
+  professorID: number;
 
   @IsString({ message: 'O professor deve ter um nome' })
   @IsOptional({ message: 'O campo nome do professor é opcional.' })
