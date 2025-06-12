@@ -74,7 +74,6 @@ model Comentarios {
   usuarioID   Int
   avaliacaoID Int
   conteudo    String
-  notice      String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
