@@ -1,0 +1,23 @@
+### list usuario
+GET http://localhost:5000/usuario
+
+### get usuario
+GET http://localhost:5000/usuario/{id}
+
+### create usuario
+POST http://localhost:5000/usuario
+
+### update usuario
+PUT http://localhost:5000/usuario/{id}
+
+### delete usuario
+DELETE http://localhost:5000/usuario/{id}
+
+### login usuario
+POST http://localhost:5000/usuario/login
+Content-Type: application/json
+
+{
+  "email": "seu@email.com",
+  "senha": "suasenha"
+}
