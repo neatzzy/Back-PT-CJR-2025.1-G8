@@ -15,5 +15,8 @@ export class CreateProfessorDto extends PartialType(Professor){
     disciplinas?: any[];
 
     @IsOptional()
+    fotoPerfil?: Buffer;
+
+    @IsOptional()
     Avaliacao?: any[]
 }

@@ -1,26 +1,90 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateProfessorDto } from './dto/create-professor.dto';
 import { UpdateProfessorDto } from './dto/update-professor.dto';
 
 @Injectable()
 export class ProfessorService {
-  create(createProfessorDto: CreateProfessorDto) {
-    return 'This action adds a new professor';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(createProfessorDto: CreateProfessorDto) {
+    const existingProfessor = await this.prisma.professor.findFirst({ where: { nome: createProfessorDto.nome } });
+    if (existingProfessor) {
+      throw new ConflictException('Este professor já está cadastrado.');
+    }
+    
+    const data = {
+      nome: createProfessorDto.nome,
+      departamento: createProfessorDto.departamento ?? '',
+      disciplinas: createProfessorDto.disciplinas
+        ? { create: createProfessorDto.disciplinas }
+        : undefined,
+      fotoPerfil: createProfessorDto.fotoPerfil,
+    };
+
+    return await this.prisma.professor.create({ data });
+    }
+
+  async findAll() {
+    return await this.prisma.professor.findMany({
+      select: {
+        id: true,
+        nome: true,
+        departamento: true,
+        fotoPerfil: true,
+        disciplinas: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all professor`;
+  async findOne(id: number) {
+    const professor = await this.prisma.professor.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        nome: true,
+        departamento: true,
+        fotoPerfil: true,
+        createdAt: true, 
+        updatedAt: true,
+        Avaliacao: true,
+        disciplinas: true,
+      },
+    });
+
+    if(!professor) throw new NotFoundException("Professor com ID ${id} não encontrado");
+    
+    return professor;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} professor`;
-  }
+  async update(id: number, updateProfessorDto: UpdateProfessorDto) {
+      const professor = await this.prisma.professor.findUnique({ where: { id } });
+      if (!professor) {
+        throw new NotFoundException(`Professor com ID ${id} não encontrado`);
+      }
+      const { id: _id, createdAt, updatedAt, Avaliacao, disciplinas, ...rest } = updateProfessorDto;
 
-  update(id: number, updateProfessorDto: UpdateProfessorDto) {
-    return `This action updates a #${id} professor`;
-  }
+      const data: any = { ...rest };
+      if (disciplinas) {
+        data.disciplinas = { set: disciplinas };
+      }
 
-  remove(id: number) {
-    return `This action removes a #${id} professor`;
-  }
+      const updatedProfessor = await this.prisma.professor.update({
+        where: { id },
+        data,
+      });
+      return { message: 'Professor atualizado com sucesso', data: updatedProfessor };
+    }
+
+    async remove(id: number) {
+      const professor = await this.prisma.professor.findUnique({ where: { id } });
+      if (!professor) {
+        throw new NotFoundException(`Professor com ID ${id} não encontrado`);
+      }
+      await this.prisma.professor.delete({ where: { id } });
+      return { message: `Professor removido com sucesso` };
+    }
 }
+
