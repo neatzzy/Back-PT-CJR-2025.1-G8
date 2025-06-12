@@ -7,13 +7,13 @@ export class FindAllAvaliacoesDto {
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  page?: number = 1;
+  page?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  pageSize?: number = 5;
+  pageSize?: number;
 
   @IsOptional()
   @IsIn(['createdAt','updateAt', 'disciplina','professor'])
@@ -41,3 +41,4 @@ export class FindAllAvaliacoesDto {
   @IsString()
   include?: string; 
 }
+
