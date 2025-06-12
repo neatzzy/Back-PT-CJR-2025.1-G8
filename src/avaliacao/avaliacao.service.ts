@@ -4,6 +4,7 @@ import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
+import { handlePrismaError } from 'src/config/ErrorPrisma';
 
 @Injectable()
 export class AvaliacaoService {
@@ -82,28 +83,8 @@ export class AvaliacaoService {
       });
     
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        
-        // Erro de constraint de chave estrangeira
-        if (error.code === 'P2003') {
-          throw new BadRequestException({
-            message: 'Violação de integridade referencial. Verifique se todos os IDs referenciados existem.',
-            prismaError: error.meta,
-          });
-        }
-        
-        // Outros erros conhecidos do Prisma
-        throw new BadRequestException({
-          message: 'Erro Prisma: ' + error.message,
-          prismaError: error.meta,
-        });
-      }
       
-      // Outros erros não tratados
-      throw new InternalServerErrorException({
-        message: 'Erro interno ao criar avaliação.',
-        error: error.message,
-      });
+      handlePrismaError(error);
     }
   }
 
@@ -121,11 +102,8 @@ export class AvaliacaoService {
     } = params;
 
     const pageNumber = page ?? 1;
-    const pageSizeNumber = pageSize ?? 10;
     const sortBy = sort ?? 'createdAt';
     const sortOrder = order ?? 'desc';
-    
-    const skip = (pageNumber - 1) * pageSizeNumber;
 
     const where: any = {};
     if (professorID) where.professorID = professorID;
@@ -133,31 +111,41 @@ export class AvaliacaoService {
     if (search) { where.conteudo = { contains: search, mode: 'insensitive' }; }
 
     const includeOptions: any = {};
-    if (include?.includes('professor')) includeOptions.usuario = true;
-    if (include?.includes('disciplina')) includeOptions.usuario = true;
+    if (include?.includes('professor')) includeOptions.professor = true;
+    if (include?.includes('disciplina')) includeOptions.disciplina = true;
     if (include?.includes('comentarios')) includeOptions.comentarios = true;
 
-
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.avaliacao.findMany({
-        where,
-        include: includeOptions,
-        skip,
-        take: pageSizeNumber,
-        orderBy: { [sortBy]: sortOrder },
-      }),
-      this.prisma.avaliacao.count({ where }),
-    ]);
-
-    return {
-      data,
-      meta: {
-        total,
-        page: pageNumber,
-        pageSize: pageSizeNumber,
-        totalPages: Math.ceil(total / pageSizeNumber),
-      },
+    const queryOptions: any = {
+      where,
+      include: includeOptions,
+      orderBy: { [sortBy]: sortOrder },
     };
+
+    if (pageSize) {
+      queryOptions.skip = (pageNumber - 1) * pageSize;
+      queryOptions.take = pageSize;
+    }
+
+    try{
+      
+      const [data, total] = await this.prisma.$transaction([
+        this.prisma.avaliacao.findMany(queryOptions),
+        this.prisma.avaliacao.count({ where }),
+      ]);
+  
+      return {
+        meta: {
+          total,
+          page: pageNumber,
+          pageSize: pageSize ?? total,
+          totalPages: Math.ceil(total / (pageSize ?? total)),
+        },
+        data
+      };
+
+    } catch (error) {
+      handlePrismaError(error);
+    }
   }
 
 
