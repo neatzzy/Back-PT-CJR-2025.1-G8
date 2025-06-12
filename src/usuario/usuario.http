@@ -1,0 +1,17 @@
+### list usuarios
+GET http://localhost:5000/usuario
+
+### create usuario
+POST http://localhost:5000/usuario
+
+### update usuario
+PUT http://localhost:5000/usuario
+
+### delete usuario
+DELETE http://localhost:5000/usuario
+
+### get usuario by id
+GET http://localhost:5000/usuario/{id}
+
+### delete usuario by id
+DELETE http://localhost:5000/usuario/{id}
