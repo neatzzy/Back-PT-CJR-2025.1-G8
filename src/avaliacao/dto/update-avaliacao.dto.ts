@@ -7,8 +7,16 @@ import { IsNotEmpty, IsOptional } from 'class-validator';
 adicionados ou removidos, como no instagram, por exemplo. */
 export class UpdateAvaliacaoDto extends PartialType(AvaliacaoEntity) {
     @IsOptional()
+    @IsString({ message: 'O Nome do professor deve ser uma string.' })
+    professorNome?: string;
+
+    @IsOptional()
     @IsInt({ message: 'o ID do professor deve ser um número inteiro.' })
     professorID?: number;
+
+    @IsOptional()
+    @IsString({ message: 'O Nome da disciplina deve ser uma string.' })
+    disciplinaNome?: string;
 
     @IsOptional()
     @IsInt({message: 'o ID da disciplina deve ser um número inteiro.' })
