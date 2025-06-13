@@ -69,11 +69,25 @@ export class UsuarioService {
     return user;
   }
 
+  async findByEmail(email:string){
+    const user = await this.prisma.usuario.findUnique({where : { email }})
+
+    if (!user){
+      return null
+    }
+    
+    return user
+    
+  }
+
+
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
     const user = await this.prisma.usuario.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
     }
+    const hashedPassword = await bcrypt.hash(updateUsuarioDto.senha, 10)
+
     const updateUsuario = await this.prisma.usuario.update({
       where: { id },
       data: updateUsuarioDto,
