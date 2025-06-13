@@ -16,8 +16,8 @@ export class FindAllAvaliacoesDto {
   pageSize?: number;
 
   @IsOptional()
-  @IsIn(['createdAt','updateAt', 'disciplina','professor'])
-  sort?: string = 'createdAt';
+  @IsIn(['createdAt','updatedAt', 'disciplina','professor'])
+  sort?: string = 'updatedAt';
 
   @IsOptional()
   @IsIn(['asc', 'desc'])

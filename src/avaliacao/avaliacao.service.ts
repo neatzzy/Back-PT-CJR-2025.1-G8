@@ -102,8 +102,18 @@ export class AvaliacaoService {
     } = params;
 
     const pageNumber = page ?? 1;
-    const sortBy = sort ?? 'createdAt';
-    const sortOrder = order ?? 'desc';
+    const sortBy = sort ?? 'updatedAt';
+    const sortOrder = order ?? 'asc';
+
+    let orderBy: any = {};
+
+    if (sortBy === 'professor') {
+      orderBy = { professor: { nome: sortOrder } };
+    } else if (sortBy === 'disciplina') {
+      orderBy = { disciplina: { nome: sortOrder } };
+    } else {
+      orderBy = { [sortBy]: sortOrder };
+    }
 
     const where: any = {};
     if (professorID) where.professorID = professorID;
@@ -119,7 +129,7 @@ export class AvaliacaoService {
     const queryOptions: any = {
       where,
       include: includeOptions,
-      orderBy: { [sortBy]: sortOrder },
+      orderBy,
     };
 
     if (pageSize) {
