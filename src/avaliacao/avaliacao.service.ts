@@ -233,7 +233,7 @@ export class AvaliacaoService {
             usuarioID: existingAvaliacao.usuarioID
           }));
 
-          await tx.comentario.createMany({
+          await tx.comentarios.createMany({
             data: novosComentariosData
           });
         }
