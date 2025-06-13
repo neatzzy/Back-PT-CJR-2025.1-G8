@@ -3,6 +3,7 @@ import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library';
 import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 
 @Injectable()
@@ -82,7 +83,7 @@ export class AvaliacaoService {
       });
     
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error instanceof PrismaClientKnownRequestError) {
         
         // Erro de constraint de chave estrangeira
         if (error.code === 'P2003') {
@@ -133,8 +134,8 @@ export class AvaliacaoService {
     if (search) { where.conteudo = { contains: search, mode: 'insensitive' }; }
 
     const includeOptions: any = {};
-    if (include?.includes('professor')) includeOptions.usuario = true; //aqui não deveria ser .professor?
-    if (include?.includes('disciplina')) includeOptions.usuario = true; //aqui não deveria ser .disciplina?
+    if (include?.includes('professor')) includeOptions.professor = true; //aqui não deveria ser .professor?
+    if (include?.includes('disciplina')) includeOptions.disciplina = true; //aqui não deveria ser .disciplina?
     if (include?.includes('comentarios')) includeOptions.comentarios = true;
 
 
@@ -175,10 +176,20 @@ export class AvaliacaoService {
     if (!avaliacao) {
       throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
     }
-    return `Essa ação retorna a seguinte avaliação #${id}`;
+    return avaliacao;
   }
 
-  update(id: number, updateAvaliacaoDto: UpdateAvaliacaoDto) {
+  async update(id: number, updateAvaliacaoDto: UpdateAvaliacaoDto) {
+    const existingAvaliacao = await this.prisma.avaliacao.findUnique({
+      where: { id },
+    });
+    if (!existingAvaliacao) {
+      throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+    }
+
+    try {
+      return await this.prisma.$transaction(async (tx) )
+    }
     return `Essa ação atualiza a #${id} avaliacao`;
   }
 
