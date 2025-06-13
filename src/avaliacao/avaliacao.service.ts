@@ -188,9 +188,66 @@ export class AvaliacaoService {
     }
 
     try {
-      return await this.prisma.$transaction(async (tx) )
+      return await this.prisma.$transaction(async (tx) => {
+        const dataToUpdate: Prisma.AvaliacaoUpdateInput = {};
+        if (updateAvaliacaoDto.conteudo !== undefined) {
+          dataToUpdate.conteudo = updateAvaliacaoDto.conteudo;
+        }
+        
+        if (updateAvaliacaoDto.professorID !== undefined) {
+          const professor = await tx.professor.findUnique({ where: { id: updateAvaliacaoDto.professorID } });
+          if (!professor) {
+            throw new NotFoundException(`ID ${updateAvaliacaoDto.professorID} não encontrado.`);
+          }
+          dataToUpdate.professorID = updateAvaliacaoDto.professorID;
+        }
+        
+        if (updateAvaliacaoDto.disciplinaID !== undefined) {
+          const disciplina = await tx.disciplina.findUnique({ where: { id: updateAvaliacaoDto.disciplinaID } });
+          if (!disciplina) {
+            throw new NotFoundException(`ID ${updateAvaliacaoDto.disciplinaID}não encontrado.`);
+          }
+          dataToUpdate.disciplinaID = updateAvaliacaoDto.disciplinaID;
+        }
+
+        if (updateAvaliacaoDto.addComentarios && updateAvaliacaoDto.addComentarios.length > 0) {
+          const novosComentariosData = updateAvaliacaoDto.addComentarios.map((conteudoComentario: string) => ({
+            conteudo: conteudoComentario,
+            avaliacaoID: id,
+            usuarioID: existingAvaliacao.usuarioID
+          }));
+
+          await tx.comentario.createMany({
+            data: novosComentariosData
+          });
+        }
+
+        const updatedAvaliacao = await tx.avaliacao.update({
+          where: { id },
+          data: dataToUpdate,
+        });
+
+        return {message: `Avaliação ${updatedAvaliacao.id} atualizada com sucesso.`, data: updatedAvaliacao };
+      });
+
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2003') {
+          throw new BadRequestException({
+            message: 'Violação de integridade referencial. Verifique se todos os IDs referenciados existem.',
+            prismaError: error.meta,
+          });
+        }
+        throw new BadRequestException({
+          message: 'Erro Prisma: ' + error.message,
+          prismaError: error.meta,
+        });
     }
-    return `Essa ação atualiza a #${id} avaliacao`;
+    throw new InternalServerErrorException({
+        message: 'Erro interno ao atualizar avaliação.',
+        error: error.message,
+      });
+    
   }
 
   remove(id: number) {
