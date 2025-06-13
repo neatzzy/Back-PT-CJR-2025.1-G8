@@ -189,7 +189,7 @@ export class AvaliacaoService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
-        const dataToUpdate: UpdateAvaliacaoDto = {}; 
+        const dataToUpdate: any = {}; 
         if (updateAvaliacaoDto.conteudo !== undefined) {
           dataToUpdate.conteudo = updateAvaliacaoDto.conteudo;
         }
@@ -248,5 +248,13 @@ export class AvaliacaoService {
         error: error.message,
       });
     }
+  }
+  async remove(id: number) {
+    const avaliacao = await this.prisma.avaliacao.findUnique({ where: { id } });
+    if (!avaliacao) {
+      throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+    }
+    await this.prisma.avaliacao.delete({ where: { id } });
+    return { message: `Avaliação ${id} removida com sucesso.` };
   }
 }
