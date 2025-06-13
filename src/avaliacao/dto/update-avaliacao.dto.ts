@@ -1,11 +1,11 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsArray, IsString, IsInt } from 'class-validator';
-import { CreateAvaliacaoDto } from './create-avaliacao.dto';
+import { AvaliacaoEntity } from '../entities/avaliacao.entity';
 import { IsNotEmpty, IsOptional } from 'class-validator';
 
 /*marcio - não coloquei um update para os comentarios da avaliação, por serem simples, achei que comentarios podem ser apenas 
 adicionados ou removidos, como no instagram, por exemplo. */
-export class UpdateAvaliacaoDto extends PartialType(CreateAvaliacaoDto) {
+export class UpdateAvaliacaoDto extends PartialType(AvaliacaoEntity) {
     @IsOptional()
     @IsInt({ message: 'o ID do professor deve ser um número inteiro.' })
     professorID?: number;
