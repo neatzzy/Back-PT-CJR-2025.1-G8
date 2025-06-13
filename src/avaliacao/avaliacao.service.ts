@@ -134,8 +134,8 @@ export class AvaliacaoService {
     if (search) { where.conteudo = { contains: search, mode: 'insensitive' }; }
 
     const includeOptions: any = {};
-    if (include?.includes('professor')) includeOptions.professor = true; //aqui não deveria ser .professor?
-    if (include?.includes('disciplina')) includeOptions.disciplina = true; //aqui não deveria ser .disciplina?
+    if (include?.includes('professor')) includeOptions.professor = true; 
+    if (include?.includes('disciplina')) includeOptions.disciplina = true; 
     if (include?.includes('comentarios')) includeOptions.comentarios = true;
 
 
@@ -193,7 +193,7 @@ export class AvaliacaoService {
         if (updateAvaliacaoDto.conteudo !== undefined) {
           dataToUpdate.conteudo = updateAvaliacaoDto.conteudo;
         }
-        
+        //voltar apos criar modal de professor para caso ele não exista, permitir criar um novo professor no update
         if (updateAvaliacaoDto.professorID !== undefined) {
           const professor = await tx.professor.findUnique({ where: { id: updateAvaliacaoDto.professorID } });
           if (!professor) {
