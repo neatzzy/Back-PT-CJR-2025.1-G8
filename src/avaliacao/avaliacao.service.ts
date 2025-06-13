@@ -3,6 +3,7 @@ import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 import { handlePrismaError } from 'src/config/ErrorPrisma';
 
@@ -83,6 +84,22 @@ export class AvaliacaoService {
       });
     
     } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        
+        // Erro de constraint de chave estrangeira
+        if (error.code === 'P2003') {
+          throw new BadRequestException({
+            message: 'Violação de integridade referencial. Verifique se todos os IDs referenciados existem.',
+            prismaError: error.meta,
+          });
+        }
+        
+        // Outros erros conhecidos do Prisma
+        throw new BadRequestException({
+          message: 'Erro Prisma: ' + error.message,
+          prismaError: error.meta,
+        });
+      }
       
       handlePrismaError(error);
     }
@@ -112,8 +129,9 @@ export class AvaliacaoService {
       where.professor = { nome: { contains: search} };
     }
     const includeOptions: any = {};
-    if (include?.includes('professor')) includeOptions.professor = true;
-    if (include?.includes('disciplina')) includeOptions.disciplina = true;
+    
+    if (include?.includes('professor')) includeOptions.professor = true; 
+    if (include?.includes('disciplina')) includeOptions.disciplina = true; 
     if (include?.includes('comentarios')) includeOptions.comentarios = true;
 
     const queryOptions: any = {
@@ -150,15 +168,99 @@ export class AvaliacaoService {
   }
 
 
-  findOne(id: number) {
-    return `This action returns a #${id} avaliacao`;
+  async findOne(id: number) {
+    const avaliacao = await this.prisma.avaliacao.findUnique({
+      where: {id},
+      include: {
+        usuario:true,
+        professor: true,
+        disciplina: true,
+        comentarios: true,
+      },
+    });
+
+    if (!avaliacao) {
+      throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+    }
+    return avaliacao;
   }
 
-  update(id: number, updateAvaliacaoDto: UpdateAvaliacaoDto) {
-    return `This action updates a #${id} avaliacao`;
-  }
+  async update(id: number, updateAvaliacaoDto: UpdateAvaliacaoDto) {
+    const existingAvaliacao = await this.prisma.avaliacao.findUnique({
+      where: { id },
+    });
+    if (!existingAvaliacao) {
+      throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} avaliacao`;
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const dataToUpdate: any = {}; 
+        if (updateAvaliacaoDto.conteudo !== undefined) {
+          dataToUpdate.conteudo = updateAvaliacaoDto.conteudo;
+        }
+        //voltar apos criar modal de professor para caso ele não exista, permitir criar um novo professor no update
+        if (updateAvaliacaoDto.professorID !== undefined) {
+          const professor = await tx.professor.findUnique({ where: { id: updateAvaliacaoDto.professorID } });
+          if (!professor) {
+            throw new NotFoundException(`ID ${updateAvaliacaoDto.professorID} não encontrado.`);
+          }
+          dataToUpdate.professorID = updateAvaliacaoDto.professorID;
+        }
+        
+        if (updateAvaliacaoDto.disciplinaID !== undefined) {
+          const disciplina = await tx.disciplina.findUnique({ where: { id: updateAvaliacaoDto.disciplinaID } });
+          if (!disciplina) {
+            throw new NotFoundException(`ID ${updateAvaliacaoDto.disciplinaID}não encontrado.`);
+          }
+          dataToUpdate.disciplinaID = updateAvaliacaoDto.disciplinaID;
+        }
+
+        if (updateAvaliacaoDto.addComentarios && updateAvaliacaoDto.addComentarios.length > 0) {
+          const novosComentariosData = updateAvaliacaoDto.addComentarios.map((conteudoComentario: string) => ({
+            conteudo: conteudoComentario,
+            avaliacaoID: id,
+            usuarioID: existingAvaliacao.usuarioID
+          }));
+
+          await tx.comentario.createMany({
+            data: novosComentariosData
+          });
+        }
+
+        const updatedAvaliacao = await tx.avaliacao.update({
+          where: { id },
+          data: dataToUpdate,
+        });
+
+        return {message: `Avaliação ${updatedAvaliacao.id} atualizada com sucesso.`, data: updatedAvaliacao };
+      });
+
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2003') {
+          throw new BadRequestException({
+            message: 'Violação de integridade referencial. Verifique se todos os IDs referenciados existem.',
+            prismaError: error.meta,
+          });
+        }
+        throw new BadRequestException({
+          message: 'Erro Prisma: ' + error.message,
+          prismaError: error.meta,
+        });
+    }
+    throw new InternalServerErrorException({
+        message: 'Erro interno ao atualizar avaliação.',
+        error: error.message,
+      });
+    }
+  }
+  async remove(id: number) {
+    const avaliacao = await this.prisma.avaliacao.findUnique({ where: { id } });
+    if (!avaliacao) {
+      throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+    }
+    await this.prisma.avaliacao.delete({ where: { id } });
+    return { message: `Avaliação ${id} removida com sucesso.` };
   }
 }
