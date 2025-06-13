@@ -3,7 +3,7 @@ import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 
 @Injectable()
@@ -189,7 +189,7 @@ export class AvaliacaoService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
-        const dataToUpdate: Prisma.AvaliacaoUpdateInput = {};
+        const dataToUpdate: UpdateAvaliacaoDto = {}; 
         if (updateAvaliacaoDto.conteudo !== undefined) {
           dataToUpdate.conteudo = updateAvaliacaoDto.conteudo;
         }
@@ -247,10 +247,6 @@ export class AvaliacaoService {
         message: 'Erro interno ao atualizar avaliação.',
         error: error.message,
       });
-    
-  }
-
-  remove(id: number) {
-    return `Essa ação remove a #${id} avaliacao`;
+    }
   }
 }
