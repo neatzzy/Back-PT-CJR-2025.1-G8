@@ -7,7 +7,6 @@ GET http://localhost:5000/usuario/{id}
 ### create usuario
 POST http://localhost:5000/usuario
 
-### update usuario
 PUT http://localhost:5000/usuario/{id}
 
 ### delete usuario
