@@ -5,22 +5,22 @@ import { UpdateComentarioDto } from './dto/update-comentario.dto';
 @Injectable()
 export class ComentariosService {
   create(createComentarioDto: CreateComentarioDto) {
-    return 'This action adds a new comentario';
+    return 'Essa ação cria um novo comentario';
   }
 
   findAll() {
-    return `This action returns all comentarios`;
+    return `Essa ação retorna todos os comentarios`;
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} comentario`;
+    return `Essa ação retorna o  #${id} comentario`;
   }
 
   update(id: number, updateComentarioDto: UpdateComentarioDto) {
-    return `This action updates a #${id} comentario`;
+    return `Essa ação atualiza o #${id} comentario`;
   }
 
   remove(id: number) {
-    return `This action removes a #${id} comentario`;
+    return `Essa ação remove o  #${id} comentario`;
   }
 }

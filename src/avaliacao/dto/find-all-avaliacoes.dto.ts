@@ -7,17 +7,17 @@ export class FindAllAvaliacoesDto {
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  page?: number = 1;
+  page?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @IsPositive()
-  pageSize?: number = 5;
+  pageSize?: number;
 
   @IsOptional()
-  @IsIn(['createdAt','updateAt', 'disciplina','professor'])
-  sort?: string = 'createdAt';
+  @IsIn(['createdAt','updatedAt', 'disciplina','professor'])
+  sort?: string = 'updatedAt';
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
@@ -41,3 +41,4 @@ export class FindAllAvaliacoesDto {
   @IsString()
   include?: string; 
 }
+
