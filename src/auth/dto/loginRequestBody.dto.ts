@@ -6,6 +6,6 @@ export class LoginRequestBody {
     email:string;
 
     @IsNotEmpty()
-    @IsEmail()
+    @IsString()
     senha:string;
 }

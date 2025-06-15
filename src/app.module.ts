@@ -8,7 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [UsuarioModule,  AuthModule,JwtModule,ConfigModule.forRoot({isGlobal: true,}),],
+  imports: [ConfigModule.forRoot({isGlobal: true,}),UsuarioModule,  AuthModule,JwtModule,],
   controllers: [AppController],
   providers: [AppService],
 })
