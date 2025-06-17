@@ -4,11 +4,13 @@ import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import Multer from 'multer';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { Public } from 'src/auth/Decorators/isPublic.decorator';
 
 @Controller('usuario')
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
+  @Public()
   @Post()
   @UseInterceptors(FileInterceptor('fotoPerfil'))
   async create(@Body() createUsuarioDto: CreateUsuarioDto, @UploadedFile() fotoPerfil: Multer.File) {
