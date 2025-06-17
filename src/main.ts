@@ -17,8 +17,7 @@ async function bootstrap() {
 
   // Habilita CORS para todas as origens
   app.enableCors();
-
-  await app.listen(process.env.PORT_SERVER || 5000);
+  await app.listen(process.env.PORT ?? 3000);
 }
 
 bootstrap();
