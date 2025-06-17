@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import * as bcrypt from 'bcrypt';
@@ -26,6 +26,20 @@ export class UsuarioService {
     };
     
     return await this.prisma.usuario.create({ data });
+  }
+
+  async login(email: string, senha: string) {
+    const user = await this.prisma.usuario.findUnique({ where: { email } });
+    if (!user) {
+      throw new UnauthorizedException('Email ou senha inválidos');
+    }
+    const senhaValida = await bcrypt.compare(senha, user.senha);
+    if (!senhaValida) {
+      throw new UnauthorizedException('Email ou senha inválidos');
+    }
+    // Retorne apenas dados públicos do usuário
+    const { senha: _, ...userData } = user;
+    return userData;
   }
 
   async findAll() {
