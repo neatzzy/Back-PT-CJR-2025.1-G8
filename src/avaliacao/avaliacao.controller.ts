@@ -3,6 +3,7 @@ import { AvaliacaoService } from './avaliacao.service';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
+import { Public } from 'src/auth/Decorators/isPublic.decorator';
 
 @Controller('avaliacao')
 export class AvaliacaoController {
@@ -14,6 +15,7 @@ export class AvaliacaoController {
   }
 
  @Get()
+ @Public()
   findAll(@Query() query: FindAllAvaliacoesDto) {
     return this.avaliacaoService.findAll(query);
   }
