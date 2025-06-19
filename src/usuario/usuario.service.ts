@@ -83,11 +83,50 @@ export class UsuarioService {
     return user;
   }
 
+  async findMe(id: number) {
+    const user = await this.prisma.usuario.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        nome: true,
+        curso: true, 
+        departamento: true,
+        fotoPerfil: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
+    }
+
+    return {
+      ...user,
+      fotoPerfil: user.fotoPerfil ? Buffer.from(user.fotoPerfil).toString('base64') : null,
+    };
+  }
+
+  async findByEmail(email:string){
+    const user = await this.prisma.usuario.findUnique({where : { email }})
+
+    if (!user){
+      return null
+    }
+    
+    return user
+    
+  }
+
+
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
     const user = await this.prisma.usuario.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
     }
+    const hashedPassword = await bcrypt.hash(updateUsuarioDto.senha, 10)
+
     const updateUsuario = await this.prisma.usuario.update({
       where: { id },
       data: updateUsuarioDto,

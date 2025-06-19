@@ -4,12 +4,13 @@ import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import Multer from 'multer';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
-import { LoginUsuarioDto } from './dto/login-usuario';
+import { Public } from 'src/auth/Decorators/isPublic.decorator';
 
 @Controller('usuario')
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
+  @Public()
   @Post()
   @UseInterceptors(FileInterceptor('fotoPerfil'))
   async create(@Body() createUsuarioDto: CreateUsuarioDto, @UploadedFile() fotoPerfil: Multer.File) {
@@ -17,11 +18,6 @@ export class UsuarioController {
       ...createUsuarioDto,
       fotoPerfil: fotoPerfil ? fotoPerfil.buffer : undefined, // <-- só o buffer!
     });
-  }
-
-  @Post('login')
-  async login(@Body() loginDto: LoginUsuarioDto) {
-    return this.usuarioService.login(loginDto.email, loginDto.senha);
   }
 
   @Get()
