@@ -1,12 +1,15 @@
 import { Controller, Get, Post, Body, Request, HttpCode, HttpStatus, } from '@nestjs/common';
-//import { Public } from '@prisma/client/runtime/library';
 import { AuthService } from './auth.service';
 import { LoginRequestBody } from './dto/loginRequestBody.dto';
 import { Public } from './Decorators/isPublic.decorator';
+import { UsuarioService } from 'src/usuario/usuario.service';
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usuarioService: UsuarioService 
+  ) {}
 
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -16,7 +19,12 @@ export class AuthController {
   }
 
   @Get('me')
-  getProfile(@Request() req) {
-    return req.user;
+  async getProfile(@Request() req) {
+    // req.user.sub é o id do usuário
+    const user = await this.usuarioService.findMe(req.user.sub);
+    
+    if (user) return user;
+
+    return null;
   }
 }
