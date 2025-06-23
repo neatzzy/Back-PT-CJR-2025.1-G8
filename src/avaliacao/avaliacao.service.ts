@@ -139,10 +139,49 @@ export class AvaliacaoService {
       where.professor = { nome: { contains: search} };
     }
     const includeOptions: any = {};
-    
-    if (include?.includes('professor')) includeOptions.professor = true; 
-    if (include?.includes('disciplina')) includeOptions.disciplina = true; 
-    if (include?.includes('comentarios')) includeOptions.comentarios = true;
+
+    if (include?.includes('professor')) {
+      includeOptions.professor = {
+        select: {
+          id: true,
+          nome: true,
+          departamento: true,
+          disciplinas: {
+            select: {
+              disciplina: {
+                select: {
+                  nome: true
+                }
+              }
+            }
+          }
+        }
+      };
+    }
+    if (include?.includes('disciplina')) {
+      includeOptions.disciplina = {
+        select: {
+          id: true,
+          nome: true,
+        },
+      };
+    }
+    if (include?.includes('usuario')) {
+      includeOptions.usuario = {
+        select: {
+          id: true,
+          nome: true,
+          fotoPerfil: true,
+        },
+      };
+    }
+    if (include?.includes('comentarios')) {
+      includeOptions.comentarios = {
+        select: {
+          id: true,
+        },
+      };
+    }
 
     const queryOptions: any = {
       where,

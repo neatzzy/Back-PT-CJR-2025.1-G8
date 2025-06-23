@@ -25,6 +25,7 @@ export class UsuarioController {
     return this.usuarioService.findAll();
   }
 
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: number) {
     return this.usuarioService.findOne(+id);
