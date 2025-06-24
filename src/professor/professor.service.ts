@@ -11,7 +11,7 @@ export class ProfessorService {
     return 'This action adds a new professor';
   }
 
-  async findAll(searchTerm?: string) {
+  async findAllsearch(searchTerm?: string) {
     const whereCondition = searchTerm?
        {
           nome: {
