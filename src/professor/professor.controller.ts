@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { ProfessorService } from './professor.service';
 import { CreateProfessorDto } from './dto/create-professor.dto';
 import { UpdateProfessorDto } from './dto/update-professor.dto';
+import { Public } from 'src/auth/Decorators/isPublic.decorator';
 
 @Controller('professor')
 export class ProfessorController {
@@ -17,6 +18,7 @@ export class ProfessorController {
     return this.professorService.findAll(search);
   }
 
+  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.professorService.findOne(+id);
