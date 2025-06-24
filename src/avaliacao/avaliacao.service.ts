@@ -1,3 +1,4 @@
+import { Usuario } from 'src/usuario/entities/usuario.entity';
 import { ConflictException, Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
@@ -114,6 +115,7 @@ export class AvaliacaoService {
       order,
       professorID,
       disciplinaID,
+      usuarioID,
       search,
       include,
     } = params;
@@ -134,15 +136,55 @@ export class AvaliacaoService {
 
     const where: any = {};
     if (professorID) where.professorID = professorID;
+    if (usuarioID) where.usuarioID = usuarioID;
     if (disciplinaID) where.disciplinaID = disciplinaID;
     if (search) {
       where.professor = { nome: { contains: search} };
     }
     const includeOptions: any = {};
-    
-    if (include?.includes('professor')) includeOptions.professor = true; 
-    if (include?.includes('disciplina')) includeOptions.disciplina = true; 
-    if (include?.includes('comentarios')) includeOptions.comentarios = true;
+
+    if (include?.includes('professor')) {
+      includeOptions.professor = {
+        select: {
+          id: true,
+          nome: true,
+          departamento: true,
+          disciplinas: {
+            select: {
+              disciplina: {
+                select: {
+                  nome: true
+                }
+              }
+            }
+          }
+        }
+      };
+    }
+    if (include?.includes('disciplina')) {
+      includeOptions.disciplina = {
+        select: {
+          id: true,
+          nome: true,
+        },
+      };
+    }
+    if (include?.includes('usuario')) {
+      includeOptions.usuario = {
+        select: {
+          id: true,
+          nome: true,
+          fotoPerfil: true,
+        },
+      };
+    }
+    if (include?.includes('comentarios')) {
+      includeOptions.comentarios = {
+        select: {
+          id: true,
+        },
+      };
+    }
 
     const queryOptions: any = {
       where,

@@ -29,8 +29,27 @@ export class ProfessorService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} professor`;
+  async findOne(id: number) {
+    return this.prisma.professor.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        nome: true,
+        departamento: true,
+        createdAt: true,
+        updatedAt: true,
+        disciplinas: {
+          select: {
+            disciplina: {
+              select: {
+                id: true,
+                nome: true,
+              }
+            }
+          }
+        }
+      }
+    });
   }
 
   update(id: number, updateProfessorDto: UpdateProfessorDto) {
