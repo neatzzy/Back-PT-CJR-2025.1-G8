@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { Public } from 'src/auth/Decorators/isPublic.decorator';
 
 @Injectable()
 export class UsuarioService {
@@ -42,6 +43,7 @@ export class UsuarioService {
     return userData;
   }
 
+  @Public()
   async findAll() {
     return await this.prisma.usuario.findMany({
       select: {
@@ -59,6 +61,7 @@ export class UsuarioService {
     });
   }
 
+  @Public()
   async findOne(id: number) {
     const user = await this.prisma.usuario.findUnique({
       where: { id },
@@ -83,6 +86,7 @@ export class UsuarioService {
     return user;
   }
 
+  @Public()
   async findMe(id: number) {
     const user = await this.prisma.usuario.findUnique({
       where: { id },
