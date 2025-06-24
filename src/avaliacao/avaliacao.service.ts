@@ -1,3 +1,4 @@
+import { Usuario } from 'src/usuario/entities/usuario.entity';
 import { ConflictException, Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
@@ -114,6 +115,7 @@ export class AvaliacaoService {
       order,
       professorID,
       disciplinaID,
+      usuarioID,
       search,
       include,
     } = params;
@@ -134,6 +136,7 @@ export class AvaliacaoService {
 
     const where: any = {};
     if (professorID) where.professorID = professorID;
+    if (usuarioID) where.usuarioID = usuarioID;
     if (disciplinaID) where.disciplinaID = disciplinaID;
     if (search) {
       where.professor = { nome: { contains: search} };

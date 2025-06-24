@@ -31,6 +31,11 @@ export class FindAllAvaliacoesDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  usuarioID?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
   disciplinaID?: number;
 
   @IsOptional()
