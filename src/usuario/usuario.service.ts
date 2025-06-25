@@ -129,7 +129,7 @@ export class UsuarioService {
     if (!user) {
       throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
     }
-    const hashedPassword = await bcrypt.hash(updateUsuarioDto.senha, 10)
+    updateUsuarioDto.senha = await bcrypt.hash(updateUsuarioDto.senha, 10);
 
     const updateUsuario = await this.prisma.usuario.update({
       where: { id },
@@ -138,10 +138,14 @@ export class UsuarioService {
     return {message: 'Usuário atualizado com sucesso', data: updateUsuario};    
   }
 
-  async remove(id: number) {
+  async remove(id: number, senha: string) {
     const user = await this.prisma.usuario.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
+    }
+    const senhaValida = await bcrypt.compare(senha, user.senha);
+    if (!senhaValida) {
+      throw new UnauthorizedException('Email ou senha inválidos');
     }
     await this.prisma.usuario.delete({ where: { id } });
     return { message: `Usuário removido com sucesso` };
