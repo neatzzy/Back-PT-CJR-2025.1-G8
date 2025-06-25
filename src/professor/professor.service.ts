@@ -8,52 +8,57 @@ export class ProfessorService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createProfessorDto: CreateProfessorDto) {
-    const existingProfessor = await this.prisma.professor.findFirst({ where: { nome: createProfessorDto.nome } });
+    const existingProfessor = await this.prisma.professor.findFirst({
+      where: { nome: createProfessorDto.nome },
+    });
     if (existingProfessor) {
       throw new ConflictException('Este professor já está cadastrado.');
     }
 
-    const data = {
-      nome: createProfessorDto.nome,
-      departamento: createProfessorDto.departamento ?? '',
-      disciplinas: createProfessorDto.disciplinas
-        ? { create: createProfessorDto.disciplinas }
-        : undefined,
-      fotoPerfil: createProfessorDto.fotoPerfil,
+    const { nome, departamento, disciplinaName, fotoPerfil} = createProfessorDto;
+    const data: any = { 
+      nome: nome,
+      departamento: departamento, 
+      fotoPerfil: fotoPerfil, 
+
+      professoresDisciplinas: {
+        create: {
+          disciplina: {
+            connectOrCreate: { 
+              where: { nome: disciplinaName }, 
+              create: { nome: disciplinaName }, 
+            },
+          },
+        },
+      },
     };
 
-    return await this.prisma.professor.create({ data });
-    }
-
-  async findAll() {
-    return await this.prisma.professor.findMany({
-      select: {
-        id: true,
-        nome: true,
-        departamento: true,
-        fotoPerfil: true,
-        disciplinas: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    return await this.prisma.professor.create({ data: data });
   }
 
-
-  async findAllsearch(searchTerm?: string) {
-    const whereCondition = searchTerm?
-       {
+  async findAll(search?: string) { 
+    const whereCondition = search 
+      ? {
           nome: {
-            contains: searchTerm, 
-            mode: 'insensitive', //IMPORTANTE ignora maiusculas e minusculas
+            contains: search, 
+            mode: 'insensitive',
           },
         }
       : {}; 
 
     return this.prisma.professor.findMany({
-      where: whereCondition,
+      where: whereCondition, 
       orderBy: {
-        nome: 'asc', 
+        nome: 'asc',
+      },
+      select: { 
+        id: true,
+        nome: true,
+        departamento: true,
+        fotoPerfil: true, 
+        disciplinas: true, 
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }

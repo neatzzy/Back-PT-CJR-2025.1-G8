@@ -13,12 +13,9 @@ export class ProfessorController {
     return this.professorService.create(createProfessorDto);
   }
 
-  @Get()
-  findAllsearch(@Query('search') search?: string) {
-    return this.professorService.findAllsearch(search);
-  }
-  findAll() {
-    return this.professorService.findAll();
+  @Get() 
+  findAll(@Query('search') search?: string) { 
+    return this.professorService.findAll(search); 
   }
 
   @Public()

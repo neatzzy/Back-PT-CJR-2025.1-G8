@@ -46,7 +46,7 @@ model professorDisciplina {
 
 model Disciplina {
   id        Int      @id @default(autoincrement())
-  nome      String
+  nome      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
