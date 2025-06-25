@@ -1,21 +1,24 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { AvaliacaoEntity } from "src/avaliacao/entities/avaliacao.entity";
-import { ProfessorDisciplinaEntity} from "src/professor-disciplina/entities/professor-disciplina.entity";
-export class ProfessorEntity {
-  @IsInt()
-  id: number;
+import { Avaliacao, professorDisciplina } from "@prisma/client";
+import { IsString, IsInt, IsOptional } from "class-validator";
+import { DateTime } from "luxon";
 
-  @IsString()
-  @IsNotEmpty()
-  nome: string;
+export class Professor {
+    @IsInt()
+    id: number;
 
-  @IsString()
-  @IsNotEmpty()
-  departamento: string;
+    @IsString()
+    nome: string;
 
-  disciplinas: ProfessorDisciplinaEntity[];
-  Avaliacao: AvaliacaoEntity[];
+    @IsString()
+    departamento: string;
 
-  createdAt: Date;
-  updatedAt: Date;
+    @IsOptional()
+      fotoPerfil?: Buffer;
+
+    createdAt?: DateTime;
+    updatedAt?: DateTime;
+
+    disciplinas?: professorDisciplina[];
+
+    Avaliacao?: Avaliacao[];
 }
