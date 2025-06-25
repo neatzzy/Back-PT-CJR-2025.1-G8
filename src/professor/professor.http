@@ -1,0 +1,17 @@
+### list professores
+GET http://localhost:5000/professor
+
+### create professor
+POST http://localhost:5000/professor
+
+### update professor
+PUT http://localhost:5000/professor
+
+### delete professor
+DELETE http://localhost:5000/professor
+
+### get professor by id
+GET http://localhost:5000/professor/{id}
+
+### delete professor by id
+DELETE http://localhost:5000/professor/{id}

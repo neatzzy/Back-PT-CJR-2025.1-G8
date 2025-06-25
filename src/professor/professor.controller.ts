@@ -17,6 +17,9 @@ export class ProfessorController {
   findAllsearch(@Query('search') search?: string) {
     return this.professorService.findAllsearch(search);
   }
+  findAll() {
+    return this.professorService.findAll();
+  }
 
   @Public()
   @Get(':id')
