@@ -182,6 +182,9 @@ export class AvaliacaoService {
       includeOptions.comentarios = {
         select: {
           id: true,
+          usuarioID: true, 
+          conteudo : true, 
+          updatedAt : true
         },
       };
     }
