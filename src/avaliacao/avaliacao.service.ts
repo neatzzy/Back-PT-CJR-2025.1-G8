@@ -13,40 +13,20 @@ export class AvaliacaoService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createAvaliacaoDto: CreateAvaliacaoDto) {
-    const { usuarioID, professorNome, disciplinaNome, conteudo, comentarios } = createAvaliacaoDto;
+    const {userId, professorId, disciplinaId, conteudo, comentarios } = createAvaliacaoDto;
 
     // Verifica se o usuário existe (pode ser fora da transação)
-    const usuario = await this.prisma.usuario.findUnique({ where: { id: usuarioID } });
+    const usuario = await this.prisma.usuario.findUnique({ where: { id: userId } });
     if (!usuario) {
       throw new NotFoundException('Usuário não encontrado.');
     }
+    const professor = await this.prisma.professor.findUnique({ where: { id: professorId } });
+    const disciplina = await this.prisma.disciplina.findUnique({ where: { id: disciplinaId } });
 
     try {
       
       // Tudo dentro da transação!
       return await this.prisma.$transaction(async (tx) => {
-        // Verifica/cria professor pelo nome
-        let professor = await tx.professor.findFirst({ where: { nome: professorNome } });
-        if (!professor) {
-          professor = await tx.professor.create({
-            data: {
-              nome: professorNome,
-              departamento: usuario.departamento,
-            },
-          });
-        }
-        const professorId = professor.id;
-
-        // Verifica/cria disciplina pelo nome
-        let disciplina = await tx.disciplina.findFirst({ where: { nome: disciplinaNome } });
-        if (!disciplina) {
-          disciplina = await tx.disciplina.create({
-            data: {
-              nome: disciplinaNome,
-            },
-          });
-        }
-        const disciplinaId = disciplina.id;
 
         // Cria a relação N-N antes da avaliação
         const relacao = await tx.professorDisciplina.findUnique({
@@ -67,17 +47,19 @@ export class AvaliacaoService {
           });
         }
 
-        // cria avaliação
-        const dataAvaliacao: any = {
-          usuarioID,
-          professorID: professorId,
-          disciplinaID: disciplinaId,
-          conteudo,
-        };
+        const dataAvaliacao: Prisma.AvaliacaoCreateInput = {
+        usuario: { 
+          connect: { id: userId },
+        },
+        professor: { connect: { id: professorId } },
+        disciplina: { connect: { id: disciplinaId } },
+
+        conteudo:conteudo, 
+      }
 
         if (comentarios && comentarios.length > 0) {
           dataAvaliacao.comentarios = {
-            create: comentarios,
+          //create: comentarios,
           };
         }
 

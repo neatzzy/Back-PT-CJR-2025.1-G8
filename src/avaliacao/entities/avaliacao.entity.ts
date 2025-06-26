@@ -28,7 +28,7 @@ export class AvaliacaoEntity {
 
     @IsString()
     @IsNotEmpty({ message: 'O campo conteúdo não pode estar vazio.' })
-    conteudo: string;
+    avaliacao: string;
 
     @IsOptional()
     comentarios: ComentarioEntity[]; // Relação 1:N (uma avaliação tem muitos comentários)
