@@ -32,6 +32,7 @@ export class UsuarioController {
     return this.usuarioService.findOne(+id);
   }
 
+  @Public()
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
     try {
@@ -42,6 +43,7 @@ export class UsuarioController {
   }
 }
 
+  @Public()
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {

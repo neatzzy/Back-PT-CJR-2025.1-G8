@@ -1,10 +1,10 @@
-import { IsInt, IsOptional, IsString } from "class-validator";
+import { IsEmail, IsInt, IsOptional, IsString } from "class-validator";
 
 export class Usuario {
     @IsInt()
     id: number;
 
-    @IsString()
+    @IsEmail()
     email: string;
 
     @IsString()
