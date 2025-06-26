@@ -21,7 +21,7 @@ export class ProfessorService {
       departamento: departamento, 
       fotoPerfil: fotoPerfil, 
 
-      professoresDisciplinas: {
+      disciplinas: {
         create: {
           disciplina: {
             connectOrCreate: { 

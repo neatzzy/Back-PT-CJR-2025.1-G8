@@ -16,5 +16,5 @@ export class CreateProfessorDto extends PartialType(Professor) {
   disciplinaName: string;
 
   @IsOptional()
-  fotoPerfil?: Buffer; 
+  fotoProfessor?: Buffer; 
 }
