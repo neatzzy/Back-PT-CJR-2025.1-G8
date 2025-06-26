@@ -40,8 +40,7 @@ export class ProfessorService {
     const whereCondition = search 
       ? {
           nome: {
-            contains: search, 
-            mode: 'insensitive',
+            contains: search
           },
         }
       : {}; 
