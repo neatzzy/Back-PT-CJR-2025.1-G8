@@ -1,5 +1,5 @@
 import { IsInt } from 'class-validator';
-import { ProfessorEntity } from 'src/professor/entities/professor.entity';
+import { Professor } from 'src/professor/entities/professor.entity';
 import { DisciplinaEntity } from 'src/disciplina/entities/disciplina.entity';
 
 export class ProfessorDisciplinaEntity {
@@ -9,6 +9,6 @@ export class ProfessorDisciplinaEntity {
   @IsInt()
   disciplinaID: number;
 
-  professor: ProfessorEntity;
+  professor: Professor;
   disciplina: DisciplinaEntity;
 }

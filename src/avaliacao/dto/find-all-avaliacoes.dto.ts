@@ -45,5 +45,9 @@ export class FindAllAvaliacoesDto {
   @IsOptional()
   @IsString()
   include?: string; 
+
+  @IsOptional()
+  @IsString()
+  token?: string
 }
 

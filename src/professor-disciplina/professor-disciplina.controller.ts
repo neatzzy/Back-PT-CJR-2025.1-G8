@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ProfessorDisciplinaService } from './professor-disciplina.service';
 import { CreateProfessorDisciplinaDto } from './dto/create-professor-disciplina.dto';
 import { UpdateProfessorDisciplinaDto } from './dto/update-professor-disciplina.dto';
@@ -17,10 +17,14 @@ export class ProfessorDisciplinaController {
     return this.professorDisciplinaService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.professorDisciplinaService.findOne(+id);
+  @Get(':id/disciplinas')
+  async findDisciplinasByProfessor(
+    @Param('id') professorId: string,
+    @Query('search') search?: string
+  ){
+    return this.professorDisciplinaService.findDisciplinasByProfessor(+professorId, search);
   }
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateProfessorDisciplinaDto: UpdateProfessorDisciplinaDto) {

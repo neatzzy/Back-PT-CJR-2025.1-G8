@@ -1,7 +1,7 @@
 import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { ComentarioEntity } from "src/comentarios/entities/comentario.entity";
 import { Usuario } from "src/usuario/entities/usuario.entity";
-import { ProfessorEntity } from "src/professor/entities/professor.entity";
+import { Professor } from "src/professor/entities/professor.entity";
 import { DisciplinaEntity } from "src/disciplina/entities/disciplina.entity";
 
 export class AvaliacaoEntity {
@@ -18,7 +18,7 @@ export class AvaliacaoEntity {
     @IsNotEmpty()
     professorID: number;
     
-    professor: ProfessorEntity; // Relação N:1 (muitos para um professor)
+    professor: Professor; // Relação N:1 (muitos para um professor)
 
     @IsInt()
     @IsNotEmpty()
@@ -28,7 +28,7 @@ export class AvaliacaoEntity {
 
     @IsString()
     @IsNotEmpty({ message: 'O campo conteúdo não pode estar vazio.' })
-    conteudo: string;
+    avaliacao: string;
 
     @IsOptional()
     comentarios: ComentarioEntity[]; // Relação 1:N (uma avaliação tem muitos comentários)
