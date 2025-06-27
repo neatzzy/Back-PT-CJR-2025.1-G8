@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateProfessorDisciplinaDto } from './dto/create-professor-disciplina.dto';
 import { UpdateProfessorDisciplinaDto } from './dto/update-professor-disciplina.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { FindAllProfessorDisciplinaDto } from './dto/find-all-professor-disciplina.dto';
+import { handlePrismaError } from 'src/config/ErrorPrisma';
 @Injectable()
 export class ProfessorDisciplinaService {
   constructor(private prisma: PrismaService) {}
@@ -39,8 +41,123 @@ export class ProfessorDisciplinaService {
     return professorDisciplinas.map(pd => pd.disciplina);
   }
 
-  findAll() {
-    return `This action returns all professorDisciplina`;
+  async findAll(params : FindAllProfessorDisciplinaDto) {
+    const {
+      page,
+      pageSize,
+      professorID,
+      disciplinaID,
+      search,
+      order,
+      sort,
+      include,
+    } = params;
+
+    const pageNumber = page ?? 1;
+    const sortBy = sort ?? 'createdAt';
+    const sortOrder = order ?? 'asc';
+
+    let orderBy: any = {};
+    if (sortBy === 'professor') {
+      orderBy = { professor: { nome: sortOrder } };
+
+    } else if (sortBy === 'disciplina') {
+      orderBy = { disciplina: { nome: sortOrder } };
+
+    } else {
+      orderBy = { [sortBy]: sortOrder };
+    }
+
+    const where: any = {};
+    if (professorID) where.professorID = professorID;
+    if (disciplinaID) where.disciplinaID = disciplinaID;
+    if (search) {
+      where.professor = { 
+        nome: { 
+          contains: search
+        } 
+      };
+    }
+    
+    const includeOptions: any = {};
+
+    if (include?.includes('professor')) {
+      includeOptions.professor = {
+        select: {
+          id: true,
+          nome: true,
+          departamento : true,
+          updatedAt : true, 
+          createdAt : true,
+          fotoPerfil : true,
+        }
+      };
+    }
+    if (include?.includes('disciplina')) {
+      includeOptions.disciplina = {
+        select: {
+          id: true,
+          nome: true,
+          updatedAt : true, 
+          createdAt : true,
+        },
+      };
+    }
+
+    const queryOptions: any = {
+      where,
+      include: includeOptions,
+      orderBy,
+    };
+
+    if (pageSize) {
+      queryOptions.skip = (pageNumber - 1) * pageSize;
+      queryOptions.take = pageSize;
+    }
+
+    try{
+      
+      const [data, total] = await this.prisma.$transaction([
+        this.prisma.avaliacao.findMany(queryOptions),
+        this.prisma.avaliacao.count({ where }),
+      ]);
+
+      const dataWithBase64 = data.map(item => {
+         if (item['professor'] && item['professor']?.fotoPerfil) {
+          let fotoPerfil = item['professor']?.fotoPerfil;
+          // Se vier como Buffer, converte para base64
+          if (Buffer.isBuffer(fotoPerfil)) {
+            fotoPerfil = fotoPerfil.toString('base64');
+          }
+          // Se vier como objeto (prisma pode retornar como { type: 'Buffer', data: [...] })
+          else if (typeof fotoPerfil === 'object' && fotoPerfil.data) {
+            fotoPerfil = Buffer.from(fotoPerfil.data).toString('base64');
+          }
+          return {
+            ...item,
+            professor: {
+              ...item['professor'],
+              fotoPerfil,
+            },
+          };
+        }
+        return item;
+
+      });
+  
+      return {
+        meta: {
+          total,
+          page: pageNumber,
+          pageSize: pageSize ?? total,
+          totalPages: Math.ceil(total / (pageSize ?? total)),
+        },
+        data: dataWithBase64,
+      };
+
+    } catch (error) {
+      handlePrismaError(error);
+    }
   }
 
   findOne(id: number) {
