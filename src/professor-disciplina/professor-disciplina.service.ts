@@ -54,18 +54,15 @@ export class ProfessorDisciplinaService {
     } = params;
 
     const pageNumber = page ?? 1;
-    const sortBy = sort ?? 'createdAt';
+    const sortBy = sort ?? 'professor';
     const sortOrder = order ?? 'asc';
 
     let orderBy: any = {};
-    if (sortBy === 'professor') {
-      orderBy = { professor: { nome: sortOrder } };
-
-    } else if (sortBy === 'disciplina') {
-      orderBy = { disciplina: { nome: sortOrder } };
-
-    } else {
-      orderBy = { [sortBy]: sortOrder };
+    
+    if (sortBy === 'professor' || sortBy === 'disciplina') {
+      orderBy = { [sortBy]: { nome: sortOrder } };
+    } else{
+      orderBy = { 'professor' : {[sortBy] : sortOrder} };
     }
 
     const where: any = {};
@@ -118,8 +115,8 @@ export class ProfessorDisciplinaService {
     try{
       
       const [data, total] = await this.prisma.$transaction([
-        this.prisma.avaliacao.findMany(queryOptions),
-        this.prisma.avaliacao.count({ where }),
+        this.prisma.professorDisciplina.findMany(queryOptions),
+        this.prisma.professorDisciplina.count({ where }),
       ]);
 
       const dataWithBase64 = data.map(item => {

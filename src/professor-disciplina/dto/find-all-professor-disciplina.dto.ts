@@ -16,8 +16,8 @@ export class FindAllProfessorDisciplinaDto {
   pageSize?: number;
 
   @IsOptional()
-  @IsIn(['createdAt','updatedAt', 'disciplina','professor'])
-  sort?: string = 'updatedAt';
+  @IsIn(['createdAt','updatedAt','disciplina','professor'])
+  sort?: string = 'professor';
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
