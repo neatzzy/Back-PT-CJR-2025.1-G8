@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import * as bcrypt from 'bcrypt';
@@ -10,23 +10,47 @@ export class UsuarioService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createUserDto: CreateUsuarioDto) {
-    const existingUser = await this.prisma.usuario.findUnique({ where: { email: createUserDto.email } });
-    if (existingUser) {
-      throw new ConflictException('Este e-mail já está sendo usado.');
+    try {
+      // Validação de formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(createUserDto.email)) {
+        throw new BadRequestException('Formato de e-mail inválido.');
+      }
+
+      
+      const existingUser = await this.prisma.usuario.findUnique({ where: { email: createUserDto.email } });
+      if (existingUser) {
+        throw new ConflictException('Este e-mail já está sendo usado.');
+      }
+      
+      // Validação de senha
+      if (!createUserDto.senha || createUserDto.senha.length < 6) {
+        throw new BadRequestException('A senha deve ter no mínimo 6 caracteres.');
+      }
+      
+      const hashedPassword = await bcrypt.hash(createUserDto.senha, 10);
+
+      const data = {
+        email: createUserDto.email,
+        senha: hashedPassword,
+        nome: createUserDto.nome ?? '',
+        departamento: createUserDto.departamento ?? '',
+        curso: createUserDto.curso ?? '',
+        fotoPerfil: createUserDto.fotoPerfil,
+      };
+
+      return await this.prisma.usuario.create({ data });
+    } catch (error) {
+      // Se já for uma exceção do Nest, apenas relança
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      // Para outros erros, lança erro genérico
+      throw new BadRequestException('Erro ao criar usuário: ' + error.message);
     }
-
-    const hashedPassword = await bcrypt.hash(createUserDto.senha, 10);
-
-    const data = {
-      email: createUserDto.email,
-      senha: hashedPassword,
-      nome: createUserDto.nome ?? '',
-      departamento: createUserDto.departamento ?? '',
-      curso: createUserDto.curso ?? '',
-      fotoPerfil: createUserDto.fotoPerfil,
-    };
-    
-    return await this.prisma.usuario.create({ data });
   }
 
   async login(email: string, senha: string) {
