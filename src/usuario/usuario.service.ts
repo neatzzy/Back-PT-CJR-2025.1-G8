@@ -4,6 +4,7 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Public } from 'src/auth/Decorators/isPublic.decorator';
+import { BufferImageToBase64String } from 'src/utils/functions';
 
 @Injectable()
 export class UsuarioService {
@@ -69,7 +70,7 @@ export class UsuarioService {
 
   @Public()
   async findAll() {
-    return await this.prisma.usuario.findMany({
+    const user =  await this.prisma.usuario.findMany({
       select: {
         id: true,
         email: true,
@@ -83,6 +84,11 @@ export class UsuarioService {
         updatedAt: true,
       },
     });
+
+    return {
+      ...user,
+      fotoPerfil: BufferImageToBase64String(user),
+    };
   }
 
   @Public()
@@ -107,7 +113,10 @@ export class UsuarioService {
       throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
     }
 
-    return user;
+     return {
+      ...user,
+      fotoPerfil: BufferImageToBase64String(user),
+    };
   }
 
   @Public()
@@ -132,7 +141,7 @@ export class UsuarioService {
 
     return {
       ...user,
-      fotoPerfil: user.fotoPerfil ? Buffer.from(user.fotoPerfil).toString('base64') : null,
+      fotoPerfil: BufferImageToBase64String(user),
     };
   }
 
@@ -143,7 +152,10 @@ export class UsuarioService {
       return null
     }
     
-    return user
+     return {
+      ...user,
+      fotoPerfil: BufferImageToBase64String(user),
+    };
     
   }
 
@@ -171,3 +183,5 @@ export class UsuarioService {
     return { message: `Usuário removido com sucesso` };
   }
 }
+
+
