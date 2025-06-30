@@ -15,11 +15,11 @@ export class ProfessorService {
       throw new ConflictException('Este professor já está cadastrado.');
     }
 
-    const { nome, departamento, disciplinaName, fotoPerfil} = createProfessorDto;
+    const { nome, departamento, disciplinaName, fotoProfessor} = createProfessorDto;
     const data: any = { 
       nome: nome,
       departamento: departamento, 
-      fotoPerfil: fotoPerfil, 
+      fotoPerfil: fotoProfessor, 
 
       disciplinas: {
         create: {
