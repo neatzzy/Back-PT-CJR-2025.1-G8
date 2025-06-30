@@ -92,6 +92,7 @@ export class AvaliacaoService {
   
   async findAll(params: FindAllAvaliacoesDto) {
     const {
+      avaliacaoId,
       page,
       pageSize,
       sort,
@@ -124,6 +125,8 @@ export class AvaliacaoService {
     if (search) {
       where.professor = { nome: { contains: search} };
     }
+    if (avaliacaoId) where.id = avaliacaoId;
+    
     const includeOptions: any = {};
 
     if (include?.includes('professor')) {

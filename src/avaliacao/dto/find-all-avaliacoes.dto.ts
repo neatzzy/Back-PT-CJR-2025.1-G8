@@ -7,6 +7,12 @@ export class FindAllAvaliacoesDto {
   @Type(() => Number)
   @IsInt()
   @IsPositive()
+  avaliacaoId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
   page?: number;
 
   @IsOptional()
