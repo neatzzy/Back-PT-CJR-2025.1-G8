@@ -198,22 +198,32 @@ export class AvaliacaoService {
       ]);
 
       const dataWithBase64 = data.map(item => {
-          if (item['usuario'] && item['usuario']?.fotoPerfil) {
-            let fotoPerfil = item['usuario']?.fotoPerfil ? 
-              BufferImageToBase64String(item['usuario']) : null;
+        // Trata o usuário da avaliação
+        const usuarioAvaliacao = item['usuario']
+          ? {
+              ...item['usuario'],
+              fotoPerfil: BufferImageToBase64String(item['usuario']),
+            }
+          : null;
 
-            return {
-              ...item,
-              usuario: {
-                ...item['usuario'],
-                fotoPerfil,
-              },
-            };
-          }
+        // Trata os comentários (se existirem)
+        const comentariosTratados = Array.isArray(item['comentarios'])
+          ? item['comentarios'].map(comentario => ({
+              ...comentario,
+              usuario: comentario.usuario? 
+                  {
+                    ...comentario.usuario,
+                    fotoPerfil: BufferImageToBase64String(comentario.usuario),
+                  }
+                : null,
+            }))
+          : [];
 
-          
-        return item;
-
+        return {
+          ...item,
+          usuario: usuarioAvaliacao,
+          comentarios: comentariosTratados,
+        };
       });
   
       return {
