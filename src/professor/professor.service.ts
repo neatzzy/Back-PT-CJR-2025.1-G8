@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProfessorDto } from './dto/create-professor.dto';
 import { UpdateProfessorDto } from './dto/update-professor.dto';
+import { BufferImageToBase64String } from 'src/utils/functions';
 
 @Injectable()
 export class ProfessorService {
@@ -15,11 +16,11 @@ export class ProfessorService {
       throw new ConflictException('Este professor já está cadastrado.');
     }
 
-    const { nome, departamento, disciplinaName, fotoPerfil} = createProfessorDto;
+    const { nome, departamento, disciplinaName, fotoProfessor} = createProfessorDto;
     const data: any = { 
       nome: nome,
       departamento: departamento, 
-      fotoPerfil: fotoPerfil, 
+      fotoPerfil: fotoProfessor, 
 
       disciplinas: {
         create: {
@@ -45,7 +46,7 @@ export class ProfessorService {
         }
       : {}; 
 
-    return this.prisma.professor.findMany({
+    return await this.prisma.professor.findMany({
       where: whereCondition, 
       orderBy: {
         nome: 'asc',
@@ -63,7 +64,7 @@ export class ProfessorService {
   }
 
   async findOne(id: number) {
-    const professor =  this.prisma.professor.findUnique({
+    const professor = await this.prisma.professor.findUnique({
       where: { id },
       select: {
         id: true,
@@ -80,12 +81,17 @@ export class ProfessorService {
               }
             }
           }
-        }
+        },
+        fotoPerfil : true,
       }
     });
 
     if(!professor) throw new NotFoundException("Professor com ID ${id} não encontrado");
-    return professor;
+
+    return {
+      ...professor,
+      fotoPerfil : BufferImageToBase64String(professor),
+    };
   }
 
   async update(id: number, updateProfessorDto: UpdateProfessorDto) {

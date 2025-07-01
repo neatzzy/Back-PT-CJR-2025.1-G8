@@ -4,6 +4,7 @@ import { UpdateProfessorDisciplinaDto } from './dto/update-professor-disciplina.
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindAllProfessorDisciplinaDto } from './dto/find-all-professor-disciplina.dto';
 import { handlePrismaError } from 'src/config/ErrorPrisma';
+import { BufferImageToBase64String } from 'src/utils/functions';
 @Injectable()
 export class ProfessorDisciplinaService {
   constructor(private prisma: PrismaService) {}
@@ -119,17 +120,12 @@ export class ProfessorDisciplinaService {
         this.prisma.professorDisciplina.count({ where }),
       ]);
 
+
       const dataWithBase64 = data.map(item => {
          if (item['professor'] && item['professor']?.fotoPerfil) {
-          let fotoPerfil = item['professor']?.fotoPerfil;
-          // Se vier como Buffer, converte para base64
-          if (Buffer.isBuffer(fotoPerfil)) {
-            fotoPerfil = fotoPerfil.toString('base64');
-          }
-          // Se vier como objeto (prisma pode retornar como { type: 'Buffer', data: [...] })
-          else if (typeof fotoPerfil === 'object' && fotoPerfil.data) {
-            fotoPerfil = Buffer.from(fotoPerfil.data).toString('base64');
-          }
+          let fotoPerfil = item['professor']?.fotoPerfil ? 
+            BufferImageToBase64String(item['professor']) : null;
+
           return {
             ...item,
             professor: {

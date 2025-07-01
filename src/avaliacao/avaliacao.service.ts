@@ -7,6 +7,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 import { handlePrismaError } from 'src/config/ErrorPrisma';
+import { BufferImageToBase64String } from 'src/utils/functions';
 
 @Injectable()
 export class AvaliacaoService {
@@ -169,7 +170,14 @@ export class AvaliacaoService {
           id: true,
           usuarioID: true, 
           conteudo : true, 
-          updatedAt : true
+          updatedAt : true, 
+          usuario : {
+            select : {
+              id: true, 
+              nome : true, 
+              fotoPerfil : true,
+            }
+          },
         },
       };
     }
@@ -191,6 +199,35 @@ export class AvaliacaoService {
         this.prisma.avaliacao.findMany(queryOptions),
         this.prisma.avaliacao.count({ where }),
       ]);
+
+      const dataWithBase64 = data.map(item => {
+        // Trata o usuário da avaliação
+        const usuarioAvaliacao = item['usuario']
+          ? {
+              ...item['usuario'],
+              fotoPerfil: BufferImageToBase64String(item['usuario']),
+            }
+          : null;
+
+        // Trata os comentários (se existirem)
+        const comentariosTratados = Array.isArray(item['comentarios'])
+          ? item['comentarios'].map(comentario => ({
+              ...comentario,
+              usuario: comentario.usuario? 
+                  {
+                    ...comentario.usuario,
+                    fotoPerfil: BufferImageToBase64String(comentario.usuario),
+                  }
+                : null,
+            }))
+          : [];
+
+        return {
+          ...item,
+          usuario: usuarioAvaliacao,
+          comentarios: comentariosTratados,
+        };
+      });
   
       return {
         meta: {
@@ -199,7 +236,7 @@ export class AvaliacaoService {
           pageSize: pageSize ?? total,
           totalPages: Math.ceil(total / (pageSize ?? total)),
         },
-        data
+        data : dataWithBase64,
       };
 
     } catch (error) {
