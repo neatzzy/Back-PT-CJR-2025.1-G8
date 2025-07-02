@@ -6,6 +6,10 @@ import { IsNotEmpty, IsOptional } from 'class-validator';
 /*marcio - não coloquei um update para os comentarios da avaliação, por serem simples, achei que comentarios podem ser apenas 
 adicionados ou removidos, como no instagram, por exemplo. */
 export class UpdateAvaliacaoDto extends PartialType(AvaliacaoEntity) {
+    @IsInt()
+    @IsOptional()
+    usuarioID: number;
+
     @IsOptional()
     @IsString({ message: 'O Nome do professor deve ser uma string.' })
     professorNome?: string;
