@@ -332,12 +332,34 @@ export class AvaliacaoService {
       });
     }
   }
+  
   async remove(id: number) {
-    const avaliacao = await this.prisma.avaliacao.findUnique({ where: { id } });
-    if (!avaliacao) {
-      throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+    try {
+      const avaliacao = await this.prisma.avaliacao.findUnique({ where: { id } });
+      if (!avaliacao) {
+        throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+      }
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Deleta comentários relacionados primeiro
+        await tx.comentarios.deleteMany({
+          where: { avaliacaoID: id },
+        });
+
+        // Deleta a avaliação
+        const removeData = await tx.avaliacao.delete({
+          where: { id },
+        });
+
+        return removeData;
+      }, { timeout: 20000 }); // timeout de 20 segundos
+
+      return {
+        message: `Avaliação ${id} removida com sucesso.`,
+        data: result,
+      };
+    } catch (error) {
+      handlePrismaError(error);
     }
-    await this.prisma.avaliacao.delete({ where: { id } });
-    return { message: `Avaliação ${id} removida com sucesso.` };
   }
 }
