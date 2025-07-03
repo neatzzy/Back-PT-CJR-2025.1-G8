@@ -2,11 +2,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ComentariosService } from './comentarios.service';
 import { CreateComentarioDto } from './dto/create-comentario.dto';
 import { UpdateComentarioDto } from './dto/update-comentario.dto';
+import { Public } from 'src/auth/Decorators/isPublic.decorator';
 
 @Controller('comentarios')
 export class ComentariosController {
   constructor(private readonly comentariosService: ComentariosService) {}
-
+  @Public()
   @Post()
   create(@Body() createComentarioDto: CreateComentarioDto) {
     return this.comentariosService.create(createComentarioDto);
