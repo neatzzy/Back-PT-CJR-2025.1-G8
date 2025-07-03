@@ -18,7 +18,7 @@ export class ComentariosService {
           throw new NotFoundException('Usuário não encontrado.');
         }
     try{
-      return await this.prisma.$transaction(async (tx) => {
+      
         // Verifica se a avaliação existe
       const relacao = await this.prisma.avaliacao.findUnique({
         where: { id: avaliacaoId },
@@ -33,7 +33,7 @@ export class ComentariosService {
       };
 
       return this.prisma.comentarios.create({ data: dataComentario });
-    });
+    
 
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError) {
