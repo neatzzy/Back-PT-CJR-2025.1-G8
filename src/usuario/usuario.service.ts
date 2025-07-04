@@ -42,15 +42,10 @@ export class UsuarioService {
 
       return await this.prisma.usuario.create({ data });
     } catch (error) {
-      // Se já for uma exceção do Nest, apenas relança
-      if (
-        error instanceof ConflictException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
-      }
-      // Para outros erros, lança erro genérico
-      throw new BadRequestException('Erro ao criar usuário: ' + error.message);
+      return {
+        status: 'erro',
+        message: error.message,
+      };
     }
   }
 
@@ -161,17 +156,78 @@ export class UsuarioService {
 
 
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
+    try {
     const user = await this.prisma.usuario.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException(`Usuario com ID ${id} não encontrado`);
     }
-    updateUsuarioDto.senha = await bcrypt.hash(updateUsuarioDto.senha, 10);
 
-    const updateUsuario = await this.prisma.usuario.update({
-      where: { id },
-      data: updateUsuarioDto,
+    // Validação de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (updateUsuarioDto.email && !emailRegex.test(updateUsuarioDto.email)) {
+      throw new BadRequestException('Formato de e-mail inválido.');
+    }
+
+    // Verifica se o email já está sendo usado por outro usuário
+    if (updateUsuarioDto.email && updateUsuarioDto.email !== user.email) {
+      const existingUser = await this.prisma.usuario.findUnique({ where: { email: updateUsuarioDto.email } });
+      if (existingUser) {
+        throw new ConflictException('Este e-mail já está sendo usado por outro usuário.');
+      }
+    }
+
+    // Validação de senha obrigatória para atualizar perfil
+    if (!updateUsuarioDto.senha) {
+      throw new BadRequestException('A senha atual é obrigatória para atualizar o perfil.');
+    }
+    const senhaValida = await bcrypt.compare(updateUsuarioDto.senha, user.senha);
+    if (!senhaValida) {
+      throw new UnauthorizedException('Senha atual inválida');
+    }
+
+    // Se for trocar a senha, validar novaSenha e confirmarSenha
+    let novaSenhaHash: string | undefined = undefined;
+    if (updateUsuarioDto.novaSenha) {
+      if (updateUsuarioDto.novaSenha.length < 6) {
+        throw new BadRequestException('A nova senha deve ter no mínimo 6 caracteres.');
+      }
+      if (updateUsuarioDto.novaSenha !== updateUsuarioDto.confirmarSenha) {
+        throw new BadRequestException('A confirmação da nova senha não coincide.');
+      }
+      novaSenhaHash = await bcrypt.hash(updateUsuarioDto.novaSenha, 10);
+    }
+
+    // Remove campos opcionais se estiverem vazios ou "undefined"
+    ['novaSenha', 'confirmarSenha', 'email', 'nome', 'departamento', 'curso'].forEach((field) => {
+      if (
+        updateUsuarioDto[field] === '' ||
+        updateUsuarioDto[field] === undefined ||
+        updateUsuarioDto[field] === 'undefined'
+      ) {
+        delete updateUsuarioDto[field];
+      }
     });
-    return {message: 'Usuário atualizado com sucesso', data: updateUsuario};    
+
+    // Atualiza o usuário
+    const updatedUser = await this.prisma.usuario.update({
+      where: { id },
+      data: {
+        email: updateUsuarioDto.email ?? user.email,
+        senha: novaSenhaHash ?? user.senha,
+        nome: updateUsuarioDto.nome ?? user.nome,
+        departamento: updateUsuarioDto.departamento ?? user.departamento,
+        curso: updateUsuarioDto.curso ?? user.curso,
+        fotoPerfil: updateUsuarioDto.fotoPerfil ?? user.fotoPerfil,
+      },
+    });
+
+    return {
+      ...updatedUser,
+      fotoPerfil: BufferImageToBase64String(updatedUser),
+    };
+  } catch (error) {
+    throw error;
+  }
   }
 
   async remove(id: number) {

@@ -33,14 +33,23 @@ export class UsuarioController {
 
   @Public()
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
+  @UseInterceptors(FileInterceptor('fotoPerfil'))
+  async update(
+    @Param('id') id: string,
+    @Body() updateUsuarioDto: UpdateUsuarioDto,
+    @UploadedFile() fotoPerfil?: Express.Multer.File
+  ) {
+    // Adiciona o buffer da foto ao DTO, se enviado
+    if (fotoPerfil) {
+      updateUsuarioDto.fotoPerfil = fotoPerfil.buffer;
+    }
     try {
       const result = await this.usuarioService.update(+id, updateUsuarioDto);
-      return { status: 'successo', message: result.message, data: result.data };
+      return { status: 'successo', data: result };
     } catch (error) {
       return { status: 'erro', message: error.message };
+    }
   }
-}
 
   @Public()
   @Delete(':id')
