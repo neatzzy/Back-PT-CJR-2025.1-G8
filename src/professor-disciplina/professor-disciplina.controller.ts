@@ -31,7 +31,7 @@ export class ProfessorDisciplinaController {
 
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProfessorDisciplinaDto: UpdateProfessorDisciplinaDto) {
+  async(@Param('id') id: string, @Body() updateProfessorDisciplinaDto: UpdateProfessorDisciplinaDto) {
     return this.professorDisciplinaService.update(+id, updateProfessorDisciplinaDto);
   }
 

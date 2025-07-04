@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, UploadedFile, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, UploadedFile, Req, UseGuards } from '@nestjs/common';
 import { ProfessorService } from './professor.service';
 import { CreateProfessorDto } from './dto/create-professor.dto';
 import { UpdateProfessorDto } from './dto/update-professor.dto';
 import { Public } from 'src/auth/Decorators/isPublic.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Multer } from 'multer'
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('professor')
 export class ProfessorController {
@@ -34,8 +35,8 @@ async create(@Req() req, @UploadedFile() fotoProfessor?: Multer.File) {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProfessorDto: UpdateProfessorDto) {
-    return this.professorService.update(+id, updateProfessorDto);
+  update(@Param('id') professorId: string, @Body() updateProfessorDto: UpdateProfessorDto) {
+    return this.professorService.update(+professorId, updateProfessorDto);
   }
 
   @Delete(':id')

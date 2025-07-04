@@ -3,6 +3,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProfessorDto } from './dto/create-professor.dto';
 import { UpdateProfessorDto } from './dto/update-professor.dto';
 import { BufferImageToBase64String } from 'src/utils/functions';
+import { appendFile } from 'fs';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProfessorService {
@@ -94,24 +96,60 @@ export class ProfessorService {
     };
   }
 
-  async update(id: number, updateProfessorDto: UpdateProfessorDto) {
-      const professor = await this.prisma.professor.findUnique({ where: { id } });
-      if (!professor) {
-        throw new NotFoundException(`Professor com ID ${id} não encontrado`);
-      }
-      const { id: _id, createdAt, updatedAt, Avaliacao, disciplinas, ...rest } = updateProfessorDto;
-
-      const data: any = { ...rest };
-      if (disciplinas) {
-        data.disciplinas = { set: disciplinas };
-      }
-
-      const updatedProfessor = await this.prisma.professor.update({
-        where: { id },
-        data,
-      });
-      return { message: 'Professor atualizado com sucesso', data: updatedProfessor };
+  async update(professorId: number, dto: UpdateProfessorDto) {
+    const existing = await this.prisma.professor.findUnique({
+      where: { id: professorId },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Professor com ID ${professorId} não encontrado.`);
     }
+
+    const { disciplinaName, nome, departamento, fotoPerfil } = dto;
+    const updateData: Prisma.ProfessorUpdateInput = {};
+
+    if (nome) {
+      updateData.nome = nome;
+    }
+    if (departamento) {
+      updateData.departamento = departamento;
+    }
+    if (fotoPerfil) {
+      updateData.fotoPerfil = { set: fotoPerfil };
+    }
+    if (disciplinaName?.trim()) {
+      updateData.disciplinas = {
+        create: {
+          disciplina: {
+            connectOrCreate: {
+              where: { nome: disciplinaName },
+              create: { nome: disciplinaName },
+            },
+          },
+        },
+      };
+    }
+
+    const updatedProfessor = await this.prisma.professor.update({
+      where: { id: professorId },
+      data: updateData,
+      include: {
+        disciplinas: {
+          select: {
+            disciplina: {
+              select: {
+                id: true,
+                nome: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return {
+      message: 'Professor atualizado com sucesso',
+      data: updatedProfessor,
+    };
+  }
 
     async remove(id: number) {
       const professor = await this.prisma.professor.findUnique({ where: { id } });
