@@ -26,4 +26,12 @@ export class UpdateUsuarioDto extends PartialType(Usuario) {   //documentando o 
 
     @IsOptional()
     fotoPerfil?: Buffer; 
+
+    @IsOptional()
+    @IsString()
+    novaSenha?: string;
+
+    @IsOptional()
+    @IsString()
+    confirmarSenha?: string;
 }

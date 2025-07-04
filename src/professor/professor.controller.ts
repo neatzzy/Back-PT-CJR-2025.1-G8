@@ -4,7 +4,6 @@ import { CreateProfessorDto } from './dto/create-professor.dto';
 import { UpdateProfessorDto } from './dto/update-professor.dto';
 import { Public } from 'src/auth/Decorators/isPublic.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Multer } from 'multer'
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('professor')
@@ -13,7 +12,7 @@ export class ProfessorController {
 
   @Post()
   @UseInterceptors(FileInterceptor('fotoProfessor'))
-async create(@Req() req, @UploadedFile() fotoProfessor?: Multer.File) {
+async create(@Req() req, @UploadedFile() fotoProfessor?: Express.Multer.File) {
   const createProfessorDto: CreateProfessorDto = {
     nome: req.body.nome,
     departamento: req.body.departamento,

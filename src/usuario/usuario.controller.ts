@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInt
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
-import Multer from 'multer';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Public } from 'src/auth/Decorators/isPublic.decorator';
 
@@ -13,7 +12,7 @@ export class UsuarioController {
   @Public()
   @Post()
   @UseInterceptors(FileInterceptor('fotoPerfil'))
-  async create(@Body() createUsuarioDto: CreateUsuarioDto, @UploadedFile() fotoPerfil: Multer.File) {
+  async create(@Body() createUsuarioDto: CreateUsuarioDto, @UploadedFile() fotoPerfil: Express.Multer.File) {
     return this.usuarioService.create({
       ...createUsuarioDto,
       fotoPerfil: fotoPerfil ? fotoPerfil.buffer : undefined, // <-- só o buffer!
