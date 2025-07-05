@@ -268,7 +268,7 @@ export class AvaliacaoService {
     });
     if (!existingAvaliacao) {
       throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
-    }
+   }
 
     try {
       return await this.prisma.$transaction(async (tx) => {

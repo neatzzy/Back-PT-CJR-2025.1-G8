@@ -22,7 +22,7 @@ export class ComentariosController {
   findOne(@Param('id') id: string) {
     return this.comentariosService.findOne(+id);
   }
-
+  @Public()
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateComentarioDto: UpdateComentarioDto) {
     return this.comentariosService.update(+id, updateComentarioDto);

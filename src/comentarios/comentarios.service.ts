@@ -1,10 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateComentarioDto } from './dto/create-comentario.dto';
 import { UpdateComentarioDto } from './dto/update-comentario.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { handlePrismaError } from 'src/config/ErrorPrisma';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { text } from 'stream/consumers';
 //import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 
 @Injectable()
@@ -67,12 +68,54 @@ export class ComentariosService {
     return `Essa ação retorna o  #${id} comentario`;
   }
 
-  update(id: number, updateComentarioDto: UpdateComentarioDto) {
-    return `Essa ação atualiza o #${id} comentario`;
+  async update(id: number, updateComentarioDto: UpdateComentarioDto) {
+    const existingComentario = await this.prisma.comentarios.findUnique({
+      where: { id },
+    });
+    if (!existingComentario) {
+      throw new NotFoundException(`Comentário com ID ${id} não encontrado`)
+    }
+
+    try{
+      const datatoUpdate: any = {};
+      if (updateComentarioDto.conteudo !== undefined) {
+          datatoUpdate.conteudo = updateComentarioDto.conteudo;
+        }
+      //{revisar isso} mudar comentário de avaliação (provavelmente desnecessário)
+      if (updateComentarioDto.conteudo !== undefined) {  
+        datatoUpdate.AvaliacaoID = updateComentarioDto.avaliacaoId;
+      }
+      return {message: `Avaliação com id:${id} atualizada com sucesso.`, data: datatoUpdate};
+
+    } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+          if (error.code === 'P2003') {
+            throw new BadRequestException({
+              message: 'Violação de integridade referencial. Verifique se todos os IDs referenciados existem.',
+              prismaError: error.meta,
+            });
+          }
+          throw new BadRequestException({
+            message: 'Erro Prisma: ' + error.message,
+            prismaError: error.meta,
+          });
+        }
+        throw new InternalServerErrorException({
+          message: 'Erro interno ao atualizar avaliação.',
+          error: error.message,
+        });
+      }
+    //return `Essa ação atualiza o #${id} comentario`;
   }
 
-  remove(id: number) {
-    return `Essa ação remove o  #${id} comentario`;
+  async remove(id: number) {
+    const comentario = await this.prisma.comentarios.findUnique({ where: { id } });
+    if (!comentario){
+      throw new NotFoundException(`Avaliacao com ID ${id} não encontrada.`);
+    }
+    await this.prisma.comentarios.delete({ where : { id } });
+    return { message: `comentario ${id} removida com sucesso.` };
+    //return `Essa ação remove o  #${id} comentario`;
   }
 }
   function findAll() {
