@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInt
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
-import Multer from 'multer';
+import  Multer from 'multer';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Public } from 'src/auth/Decorators/isPublic.decorator';
 
@@ -38,7 +38,7 @@ export class UsuarioController {
   async update(
     @Param('id') id: string,
     @Body() updateUsuarioDto: UpdateUsuarioDto,
-    @UploadedFile() fotoPerfil?: Express.Multer.File
+    @UploadedFile() fotoPerfil?: Multer.File
   ) {
     // Adiciona o buffer da foto ao DTO, se enviado
     if (fotoPerfil) {
