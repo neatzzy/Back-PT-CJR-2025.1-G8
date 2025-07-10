@@ -1,22 +1,30 @@
-### list usuario
+#list all usuarios
 GET http://localhost:5000/usuario
 
-### get usuario
+#find usuario by id
 GET http://localhost:5000/usuario/{id}
 
-### create usuario
+#add new usuario
 POST http://localhost:5000/usuario
+Content-Type: application/json
+{
+    "nome": "string",
+    "email": "string",
+    "senha": "string",
+    "curso": "string",
+    "departamento": "string",
+}
 
+#update usuario
 PUT http://localhost:5000/usuario/{id}
-
-### delete usuario
+Content-Type: application/json
+{
+    "nome": "string",
+    "email": "string",
+    "senha": "string",
+    "curso": "string",
+    "departamento": "string",
+}
+#delete usuario
 DELETE http://localhost:5000/usuario/{id}
 
-### login usuario
-POST http://localhost:5000/usuario/login
-Content-Type: application/json
-
-{
-  "email": "seu@email.com",
-  "senha": "suasenha"
-}

@@ -2,13 +2,7 @@
 import { IsOptional, IsInt, IsString, IsIn, IsPositive } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class FindAllAvaliacoesDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @IsPositive()
-  avaliacaoId?: number;
-
+export class FindAllProfessorDisciplinaDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -22,8 +16,8 @@ export class FindAllAvaliacoesDto {
   pageSize?: number;
 
   @IsOptional()
-  @IsIn(['createdAt','updatedAt', 'disciplina','professor'])
-  sort?: string = 'updatedAt';
+  @IsIn(['createdAt','updatedAt','disciplina','professor'])
+  sort?: string = 'professor';
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
@@ -33,11 +27,6 @@ export class FindAllAvaliacoesDto {
   @Type(() => Number)
   @IsInt()
   professorID?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  usuarioID?: number;
 
   @IsOptional()
   @Type(() => Number)
@@ -54,6 +43,6 @@ export class FindAllAvaliacoesDto {
 
   @IsOptional()
   @IsString()
-  token?: string
+  token?: string; 
 }
 

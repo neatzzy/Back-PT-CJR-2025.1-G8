@@ -5,13 +5,17 @@ import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 
 export class CreateAvaliacaoDto extends PartialType(AvaliacaoEntity) {
-  @IsInt({ message: 'O campo usuarioID deve ser um número inteiro.' })
-  @IsNotEmpty({ message: 'O campo usuarioID não pode estar vazio.' })
-  usuarioID: number;
+  @IsInt({ message: 'O campo userId deve ser um número inteiro.' })
+  @IsNotEmpty({ message: 'O campo userId não pode estar vazio.' })
+  userId: number;
 
   @IsInt({ message: 'O campo professorID deve ser um número inteiro.' })
   @IsNotEmpty({ message: 'O campo professorID não pode estar vazio.' })
-  professorID: number;
+  professorId: number;
+
+  @IsInt({ message: 'disciplinaId deve ser um número inteiro.' })
+  @IsNotEmpty({ message: 'O campo disciplinaId não pode estar vazio.' })
+  disciplinaId: number;
 
   @IsString({ message: 'O professor deve ter um nome' })
   @IsOptional({ message: 'O campo nome do professor é opcional.' })

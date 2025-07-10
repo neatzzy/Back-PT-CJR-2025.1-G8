@@ -1,3 +1,4 @@
+import { Usuario } from 'src/usuario/entities/usuario.entity';
 import { ConflictException, Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
@@ -6,46 +7,27 @@ import { Prisma } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 import { handlePrismaError } from 'src/config/ErrorPrisma';
+import { BufferImageToBase64String } from 'src/utils/functions';
 
 @Injectable()
 export class AvaliacaoService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createAvaliacaoDto: CreateAvaliacaoDto) {
-    const { usuarioID, professorNome, disciplinaNome, conteudo, comentarios } = createAvaliacaoDto;
+    const {userId, professorId, disciplinaId, conteudo, comentarios } = createAvaliacaoDto;
 
     // Verifica se o usuário existe (pode ser fora da transação)
-    const usuario = await this.prisma.usuario.findUnique({ where: { id: usuarioID } });
+    const usuario = await this.prisma.usuario.findUnique({ where: { id: userId } });
     if (!usuario) {
       throw new NotFoundException('Usuário não encontrado.');
     }
+    const professor = await this.prisma.professor.findUnique({ where: { id: professorId } });
+    const disciplina = await this.prisma.disciplina.findUnique({ where: { id: disciplinaId } });
 
     try {
       
       // Tudo dentro da transação!
       return await this.prisma.$transaction(async (tx) => {
-        // Verifica/cria professor pelo nome
-        let professor = await tx.professor.findFirst({ where: { nome: professorNome } });
-        if (!professor) {
-          professor = await tx.professor.create({
-            data: {
-              nome: professorNome,
-              departamento: usuario.departamento,
-            },
-          });
-        }
-        const professorId = professor.id;
-
-        // Verifica/cria disciplina pelo nome
-        let disciplina = await tx.disciplina.findFirst({ where: { nome: disciplinaNome } });
-        if (!disciplina) {
-          disciplina = await tx.disciplina.create({
-            data: {
-              nome: disciplinaNome,
-            },
-          });
-        }
-        const disciplinaId = disciplina.id;
 
         // Cria a relação N-N antes da avaliação
         const relacao = await tx.professorDisciplina.findUnique({
@@ -66,17 +48,19 @@ export class AvaliacaoService {
           });
         }
 
-        // cria avaliação
-        const dataAvaliacao: any = {
-          usuarioID,
-          professorID: professorId,
-          disciplinaID: disciplinaId,
-          conteudo,
-        };
+        const dataAvaliacao: Prisma.AvaliacaoCreateInput = {
+        usuario: { 
+          connect: { id: userId },
+        },
+        professor: { connect: { id: professorId } },
+        disciplina: { connect: { id: disciplinaId } },
+
+        conteudo:conteudo, 
+      }
 
         if (comentarios && comentarios.length > 0) {
           dataAvaliacao.comentarios = {
-            create: comentarios,
+          //create: comentarios,
           };
         }
 
@@ -108,12 +92,14 @@ export class AvaliacaoService {
   
   async findAll(params: FindAllAvaliacoesDto) {
     const {
+      avaliacaoId,
       page,
       pageSize,
       sort,
       order,
       professorID,
       disciplinaID,
+      usuarioID,
       search,
       include,
     } = params;
@@ -134,15 +120,67 @@ export class AvaliacaoService {
 
     const where: any = {};
     if (professorID) where.professorID = professorID;
+    if (usuarioID) where.usuarioID = usuarioID;
     if (disciplinaID) where.disciplinaID = disciplinaID;
     if (search) {
       where.professor = { nome: { contains: search} };
     }
-    const includeOptions: any = {};
+    if (avaliacaoId) where.id = avaliacaoId;
     
-    if (include?.includes('professor')) includeOptions.professor = true; 
-    if (include?.includes('disciplina')) includeOptions.disciplina = true; 
-    if (include?.includes('comentarios')) includeOptions.comentarios = true;
+    const includeOptions: any = {};
+
+    if (include?.includes('professor')) {
+      includeOptions.professor = {
+        select: {
+          id: true,
+          nome: true,
+          departamento: true,
+          disciplinas: {
+            select: {
+              disciplina: {
+                select: {
+                  nome: true
+                }
+              }
+            }
+          }
+        }
+      };
+    }
+    if (include?.includes('disciplina')) {
+      includeOptions.disciplina = {
+        select: {
+          id: true,
+          nome: true,
+        },
+      };
+    }
+    if (include?.includes('usuario')) {
+      includeOptions.usuario = {
+        select: {
+          id: true,
+          nome: true,
+          fotoPerfil: true,
+        },
+      };
+    }
+    if (include?.includes('comentarios')) {
+      includeOptions.comentarios = {
+        select: {
+          id: true,
+          usuarioID: true, 
+          conteudo : true, 
+          updatedAt : true, 
+          usuario : {
+            select : {
+              id: true, 
+              nome : true, 
+              fotoPerfil : true,
+            }
+          },
+        },
+      };
+    }
 
     const queryOptions: any = {
       where,
@@ -161,6 +199,35 @@ export class AvaliacaoService {
         this.prisma.avaliacao.findMany(queryOptions),
         this.prisma.avaliacao.count({ where }),
       ]);
+
+      const dataWithBase64 = data.map(item => {
+        // Trata o usuário da avaliação
+        const usuarioAvaliacao = item['usuario']
+          ? {
+              ...item['usuario'],
+              fotoPerfil: BufferImageToBase64String(item['usuario']),
+            }
+          : null;
+
+        // Trata os comentários (se existirem)
+        const comentariosTratados = Array.isArray(item['comentarios'])
+          ? item['comentarios'].map(comentario => ({
+              ...comentario,
+              usuario: comentario.usuario? 
+                  {
+                    ...comentario.usuario,
+                    fotoPerfil: BufferImageToBase64String(comentario.usuario),
+                  }
+                : null,
+            }))
+          : [];
+
+        return {
+          ...item,
+          usuario: usuarioAvaliacao,
+          comentarios: comentariosTratados,
+        };
+      });
   
       return {
         meta: {
@@ -169,7 +236,7 @@ export class AvaliacaoService {
           pageSize: pageSize ?? total,
           totalPages: Math.ceil(total / (pageSize ?? total)),
         },
-        data
+        data : dataWithBase64,
       };
 
     } catch (error) {
@@ -265,12 +332,34 @@ export class AvaliacaoService {
       });
     }
   }
+  
   async remove(id: number) {
-    const avaliacao = await this.prisma.avaliacao.findUnique({ where: { id } });
-    if (!avaliacao) {
-      throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+    try {
+      const avaliacao = await this.prisma.avaliacao.findUnique({ where: { id } });
+      if (!avaliacao) {
+        throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
+      }
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Deleta comentários relacionados primeiro
+        await tx.comentarios.deleteMany({
+          where: { avaliacaoID: id },
+        });
+
+        // Deleta a avaliação
+        const removeData = await tx.avaliacao.delete({
+          where: { id },
+        });
+
+        return removeData;
+      }, { timeout: 20000 }); // timeout de 20 segundos
+
+      return {
+        message: `Avaliação ${id} removida com sucesso.`,
+        data: result,
+      };
+    } catch (error) {
+      handlePrismaError(error);
     }
-    await this.prisma.avaliacao.delete({ where: { id } });
-    return { message: `Avaliação ${id} removida com sucesso.` };
   }
 }
