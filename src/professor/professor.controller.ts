@@ -6,6 +6,9 @@ import { Public } from 'src/auth/Decorators/isPublic.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Multer } from 'multer'
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/Decorators/roles.decorator';
+import { Role } from '@prisma/client'; 
 
 @Controller('professor')
 export class ProfessorController {
@@ -40,6 +43,8 @@ async create(@Req() req, @UploadedFile() fotoProfessor?: Multer.File) {
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
   remove(@Param('id') id: string) {
     return this.professorService.remove(+id);
   }
