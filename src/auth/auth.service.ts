@@ -6,7 +6,7 @@ import { LoginRequestBody } from './dto/loginRequestBody.dto';
 import * as bcrypt from 'bcrypt';
 import { UsuarioPayload } from './type/UsuarioPayload';
 import { UsuarioToken } from './type/UsuarioToken';
-
+import { Role } from '@prisma/client'; 
 @Injectable()
 export class AuthService {
   constructor(private readonly usuarioService: UsuarioService,
@@ -24,7 +24,8 @@ export class AuthService {
 
     const payload : UsuarioPayload = { 
       email: user.email, 
-      sub: user.id, 
+      sub: user.id,
+      role: user.role, 
     };
     
     const jwtToken = this.jwtService.sign(payload, { expiresIn: '1d', secret: this.configService.get('JWT_SECRET')});
