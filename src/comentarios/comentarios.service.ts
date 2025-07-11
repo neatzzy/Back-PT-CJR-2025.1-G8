@@ -5,6 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { handlePrismaError } from 'src/config/ErrorPrisma';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { FindAllComentariosDto } from './dto/find-all-comentarios.dto';
+import { BufferImageToBase64String } from 'src/utils/functions';
 //import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 
 @Injectable()
@@ -61,8 +63,89 @@ export class ComentariosService {
       //return 'Essa ação cria um novo comentario';
     }
 
-  async findAll() {
-    return `Essa ação retorna todos os comentarios`;
+  async findAll(params:FindAllComentariosDto) {
+    const {
+      comentarioID,
+      page = 1 ,
+      pageSize,
+      sort,
+      order,
+      usuarioID,
+      avaliacaoID,
+      search,
+      include,
+    } = params;
+
+    const pageNumber = page ?? 1;
+    const sortBy = sort ?? 'updatedAt';
+    const sortOrder = order ?? 'asc';
+    const skip = (page - 1) * (pageSize ?? 0);
+
+    let orderBy: any = {};
+
+    if (sortBy === 'professor') {
+      orderBy = { professor: { nome: sortOrder } };
+    } else if (sortBy === 'disciplina') {
+      orderBy = { disciplina: { nome: sortOrder } };
+    } else {
+      orderBy = { [sortBy]: sortOrder };
+    }
+
+    const where: any = {};
+    if (avaliacaoID) where.professorID = avaliacaoID;
+    if (usuarioID) where.usuarioID = usuarioID;
+    if (avaliacaoID) where.disciplinaID = avaliacaoID;
+    if (search) {
+      where.professor = { nome: { contains: search} };
+    }
+    if (comentarioID) where.id = comentarioID;
+    
+    const includeOptions: any = {};
+    
+    // se quiser colocar lógica de include aqui
+
+    try{
+
+        const [comentarios, total] = await Promise.all([
+      this.prisma.comentarios.findMany({
+        where,
+        //orderBy: { [sort]: sortOrder },
+        skip: pageSize ? skip : undefined,
+        take: pageSize,
+        include: includeOptions,
+      }),
+      this.prisma.comentarios.count({ where }),
+    ]);
+
+    //se quiser colocar imagem no comentário
+
+    //const dataWithBase64 = comentarios.map(item => {
+     // let usuarioComentario = item.usuario;
+    //  if (usuarioComentario?.fotoPerfil) {
+    //      usuarioComentario = {
+    //      ...usuarioComentario,
+    //      fotoPerfil: BufferImageToBase64String(usuarioComentario.fotoPerfil),
+    //    };
+    //  }
+
+    //  return {
+    //    ...item,
+    //    usuario: usuarioComentario,
+    //    };
+    //  });
+      return {
+        meta: {
+          page: pageNumber,
+          pageSize: pageSize ?? total,
+          totalPages: Math.ceil(total / (pageSize ?? total)),
+        },
+        //data : dataWithBase64,
+      };
+    }catch (error) {
+    handlePrismaError(error);
+    }
+
+
   }
 
   findOne(id: number) {
@@ -73,8 +156,23 @@ export class ComentariosService {
     return `Essa ação atualiza o #${id} comentario`;
   }
 
-  remove(id: number) {
-    return `Essa ação remove o  #${id} comentario`;
+  async remove(id: number) {
+    try {
+          const comentarios = await this.prisma.comentarios.findUnique({ where: { id } });
+          if (!comentarios) {
+            throw new NotFoundException(`Comentário com ID ${id} não encontrada.`);
+          }
+          await this.prisma.comentarios.delete({
+            where: { id },
+          });
+          
+    
+          return {
+            message: `Avaliação ${id} removida com sucesso.`,
+          };
+        } catch (error) {
+          handlePrismaError(error);
+        }
   }
 }
   function findAll() {
