@@ -63,90 +63,83 @@ export class ComentariosService {
       //return 'Essa ação cria um novo comentario';
     }
 
-  async findAll(params:FindAllComentariosDto) {
-    const {
-      comentarioID,
-      page = 1 ,
-      pageSize,
-      sort,
-      order,
-      usuarioID,
-      avaliacaoID,
-      search,
-      include,
-    } = params;
+  async findAll(params: FindAllComentariosDto) {
+  const {
+    comentarioID,
+    page = 1,
+    pageSize,
+    sort,
+    order,
+    usuarioID,
+    avaliacaoID,
+    search,
+    include,
+  } = params;
 
-    const pageNumber = page ?? 1;
-    const sortBy = sort ?? 'updatedAt';
-    const sortOrder = order ?? 'asc';
-    const skip = (page - 1) * (pageSize ?? 0);
+  const pageNumber = page ?? 1;
+  const sortBy = sort ?? 'updatedAt';
+  const sortOrder = order ?? 'asc';
+  const skip = (page - 1) * (pageSize ?? 0);
 
-    let orderBy: any = {};
+  let orderBy: any = {};
+  if (sortBy === 'professor') {
+    orderBy = { professor: { nome: sortOrder } };
+  } else if (sortBy === 'disciplina') {
+    orderBy = { disciplina: { nome: sortOrder } };
+  } else {
+    orderBy = { [sortBy]: sortOrder };
+  }
 
-    if (sortBy === 'professor') {
-      orderBy = { professor: { nome: sortOrder } };
-    } else if (sortBy === 'disciplina') {
-      orderBy = { disciplina: { nome: sortOrder } };
-    } else {
-      orderBy = { [sortBy]: sortOrder };
-    }
+  const where: any = {};
+  if (avaliacaoID) where.avaliacaoID = avaliacaoID;
+  if (usuarioID) where.usuarioID = usuarioID;
+  if (comentarioID) where.id = comentarioID;
 
-    const where: any = {};
-    if (avaliacaoID) where.professorID = avaliacaoID;
-    if (usuarioID) where.usuarioID = usuarioID;
-    if (avaliacaoID) where.disciplinaID = avaliacaoID;
-    if (search) {
-      where.professor = { nome: { contains: search} };
-    }
-    if (comentarioID) where.id = comentarioID;
-    
-    const includeOptions: any = {};
-    
-    // se quiser colocar lógica de include aqui
-
-    try{
-
-        const [comentarios, total] = await Promise.all([
+  try {
+    const [comentarios, total] = await Promise.all([
       this.prisma.comentarios.findMany({
         where,
-        //orderBy: { [sort]: sortOrder },
         skip: pageSize ? skip : undefined,
         take: pageSize,
-        include: includeOptions,
+        include: {
+          usuario: true,
+        },
       }),
       this.prisma.comentarios.count({ where }),
     ]);
 
-    //se quiser colocar imagem no comentário
+    // Corrige serialização e garante que usuario.id venha corretamente
+    const comentariosComUsuario = comentarios.map((comentario) => {
+      const usuario = comentario.usuario;
+      const usuarioFormatado = usuario
+        ? {
+            id: usuario.id,
+            nome: usuario.nome,
+            fotoPerfil: usuario.fotoPerfil
+              ? BufferImageToBase64String(usuario.fotoPerfil)
+              : null,
+          }
+        : null;
 
-    //const dataWithBase64 = comentarios.map(item => {
-     // let usuarioComentario = item.usuario;
-    //  if (usuarioComentario?.fotoPerfil) {
-    //      usuarioComentario = {
-    //      ...usuarioComentario,
-    //      fotoPerfil: BufferImageToBase64String(usuarioComentario.fotoPerfil),
-    //    };
-    //  }
-
-    //  return {
-    //    ...item,
-    //    usuario: usuarioComentario,
-    //    };
-    //  });
       return {
-        meta: {
-          page: pageNumber,
-          pageSize: pageSize ?? total,
-          totalPages: Math.ceil(total / (pageSize ?? total)),
-        },
-        //data : dataWithBase64,
+        ...comentario,
+        usuario: usuarioFormatado,
       };
-    }catch (error) {
+    });
+
+    return {
+      meta: {
+        page: pageNumber,
+        pageSize: pageSize ?? total,
+        totalPages: Math.ceil(total / (pageSize ?? total)),
+      },
+      data: comentariosComUsuario,
+    };
+  } catch (error) {
     handlePrismaError(error);
-    }
-
-
   }
+}
+
 
   findOne(id: number) {
     return `Essa ação retorna o  #${id} comentario`;

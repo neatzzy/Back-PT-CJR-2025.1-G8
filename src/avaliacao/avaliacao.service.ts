@@ -7,7 +7,6 @@ import { Prisma } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { FindAllAvaliacoesDto } from './dto/find-all-avaliacoes.dto';
 import { handlePrismaError } from 'src/config/ErrorPrisma';
-import { BufferImageToBase64String } from 'src/utils/functions';
 
 @Injectable()
 export class AvaliacaoService {
@@ -170,14 +169,7 @@ export class AvaliacaoService {
           id: true,
           usuarioID: true, 
           conteudo : true, 
-          updatedAt : true, 
-          usuario : {
-            select : {
-              id: true, 
-              nome : true, 
-              fotoPerfil : true,
-            }
-          },
+          updatedAt : true
         },
       };
     }
@@ -199,35 +191,6 @@ export class AvaliacaoService {
         this.prisma.avaliacao.findMany(queryOptions),
         this.prisma.avaliacao.count({ where }),
       ]);
-
-      const dataWithBase64 = data.map(item => {
-        // Trata o usuário da avaliação
-        const usuarioAvaliacao = item['usuario']
-          ? {
-              ...item['usuario'],
-              fotoPerfil: BufferImageToBase64String(item['usuario']),
-            }
-          : null;
-
-        // Trata os comentários (se existirem)
-        const comentariosTratados = Array.isArray(item['comentarios'])
-          ? item['comentarios'].map(comentario => ({
-              ...comentario,
-              usuario: comentario.usuario? 
-                  {
-                    ...comentario.usuario,
-                    fotoPerfil: BufferImageToBase64String(comentario.usuario),
-                  }
-                : null,
-            }))
-          : [];
-
-        return {
-          ...item,
-          usuario: usuarioAvaliacao,
-          comentarios: comentariosTratados,
-        };
-      });
   
       return {
         meta: {
@@ -236,7 +199,7 @@ export class AvaliacaoService {
           pageSize: pageSize ?? total,
           totalPages: Math.ceil(total / (pageSize ?? total)),
         },
-        data : dataWithBase64,
+        data
       };
 
     } catch (error) {
@@ -332,34 +295,12 @@ export class AvaliacaoService {
       });
     }
   }
-  
   async remove(id: number) {
-    try {
-      const avaliacao = await this.prisma.avaliacao.findUnique({ where: { id } });
-      if (!avaliacao) {
-        throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
-      }
-
-      const result = await this.prisma.$transaction(async (tx) => {
-        // Deleta comentários relacionados primeiro
-        await tx.comentarios.deleteMany({
-          where: { avaliacaoID: id },
-        });
-
-        // Deleta a avaliação
-        const removeData = await tx.avaliacao.delete({
-          where: { id },
-        });
-
-        return removeData;
-      }, { timeout: 20000 }); // timeout de 20 segundos
-
-      return {
-        message: `Avaliação ${id} removida com sucesso.`,
-        data: result,
-      };
-    } catch (error) {
-      handlePrismaError(error);
+    const avaliacao = await this.prisma.avaliacao.findUnique({ where: { id } });
+    if (!avaliacao) {
+      throw new NotFoundException(`Avaliação com ID ${id} não encontrada.`);
     }
+    await this.prisma.avaliacao.delete({ where: { id } });
+    return { message: `Avaliação ${id} removida com sucesso.` };
   }
 }

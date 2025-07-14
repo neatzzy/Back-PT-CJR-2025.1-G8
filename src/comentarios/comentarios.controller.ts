@@ -10,7 +10,6 @@ export class ComentariosController {
   constructor(private readonly comentariosService: ComentariosService) {}
 
   @Post()
-  @Public()
   async create(@Body() createComentarioDto: CreateComentarioDto) {
     return await this.comentariosService.create(createComentarioDto);
   }
@@ -32,7 +31,6 @@ export class ComentariosController {
   }
 
   @Delete(':id')
-  @Public()
   async remove(@Param('id') id: string) {
     return await this.comentariosService.remove(+id);
   }
